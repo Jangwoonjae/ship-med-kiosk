@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import TouchButton from '../ui/TouchButton';
 
 interface SelectedItem {
   id: number;
@@ -35,42 +34,42 @@ export default function ConfirmStep({ actor, items, onConfirm, onBack }: Confirm
 
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto px-4 gap-4">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">수량을 확인하세요</h2>
-      <p className="text-gray-500">이름: <strong>{actor}</strong></p>
+      <h1 className="text-[30px] font-bold text-center mb-4">출고 수량 확인</h1>
+      <p className="text-[15px] text-gray-500 text-center">이름: <strong>{actor}</strong></p>
 
-      <div className="space-y-3 mb-4 max-h-[55vh] overflow-y-auto pr-1">
+      <div className="max-h-[55vh] overflow-y-auto pr-1">
         {items.map(item => (
-          <div key={item.id} className="flex items-center bg-white border border-gray-200 rounded-xl p-4 gap-3">
-            <div className="flex-1">
-              <div className="font-bold text-gray-800">{item.name_ko}</div>
-              <div className="text-sm text-gray-500">{item.name_en}</div>
+          <div key={item.id} className="flex items-center justify-between p-[5px] border-b">
+            <div>
+              <div className="text-[15px] font-bold text-gray-800">{item.name_ko}</div>
+              <div className="text-[15px] text-gray-500">{item.name_en}</div>
             </div>
             <div className="flex items-center gap-2">
-              <TouchButton
-                variant="secondary"
-                size="sm"
-                className="min-w-[48px] min-h-[48px] text-xl"
+              <button
+                className="text-[20px] p-[5px] min-w-[44px] min-h-[44px] flex items-center justify-center border rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-40 touch-manipulation"
                 onClick={() => setQty(item.id, -1)}
                 disabled={quantities[item.id] <= 1}
-              >−</TouchButton>
-              <span className="w-10 text-center text-xl font-bold">{quantities[item.id]}</span>
-              <TouchButton
-                variant="secondary"
-                size="sm"
-                className="min-w-[48px] min-h-[48px] text-xl"
+              >−</button>
+              <span className="text-[20px] font-bold min-w-[30px] text-center">{quantities[item.id]}</span>
+              <button
+                className="text-[20px] p-[5px] min-w-[44px] min-h-[44px] flex items-center justify-center border rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-40 touch-manipulation"
                 onClick={() => setQty(item.id, 1)}
                 disabled={quantities[item.id] >= item.current_qty}
-              >+</TouchButton>
+              >+</button>
             </div>
           </div>
         ))}
       </div>
 
       <div className="flex gap-3">
-        <TouchButton variant="ghost" size="lg" onClick={onBack} className="flex-1">← 뒤로</TouchButton>
-        <TouchButton variant="primary" size="lg" onClick={handleConfirm} className="flex-1">
-          출고 완료
-        </TouchButton>
+        <button
+          className="text-[20px] font-semibold p-[5px] flex-1 border border-gray-300 text-gray-700 rounded-lg flex items-center justify-center min-h-[56px] hover:bg-gray-50 touch-manipulation"
+          onClick={onBack}
+        >← 뒤로</button>
+        <button
+          className="text-[20px] font-semibold p-[5px] flex-1 bg-blue-600 text-white rounded-lg flex items-center justify-center min-h-[56px] hover:bg-blue-700 touch-manipulation"
+          onClick={handleConfirm}
+        >출고 완료</button>
       </div>
     </div>
   );

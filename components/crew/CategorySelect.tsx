@@ -1,5 +1,4 @@
 'use client';
-import TouchButton from '../ui/TouchButton';
 
 const CATEGORIES = [
   { key: '내용약', label: '내복약', icon: '💊', desc: '먹는 약' },
@@ -14,28 +13,19 @@ interface CategorySelectProps {
 
 export default function CategorySelect({ counts, onSelect }: CategorySelectProps) {
   return (
-    <div className="flex flex-col items-center gap-4 sm:gap-6 w-full max-w-3xl mx-auto px-4">
-      <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center">분류를 선택하세요</h2>
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full">
+    <div className="flex flex-col items-center justify-center w-full px-4">
+      <h1 className="text-[30px] font-bold text-center mb-6">의약품 분류를 선택하세요</h1>
+      <div className="grid grid-cols-3 gap-4 justify-items-center mx-auto w-full max-w-[700px]">
         {CATEGORIES.map(cat => (
           <button
             key={cat.key}
             onClick={() => onSelect(cat.key)}
-            className="
-              flex flex-col items-center justify-center gap-2 sm:gap-3
-              min-h-[110px] sm:min-h-[160px] p-3 sm:p-6
-              bg-white border-2 border-gray-200
-              rounded-2xl shadow-sm
-              hover:border-blue-400 hover:shadow-md
-              active:scale-95 active:bg-blue-50
-              transition-all duration-100
-              touch-manipulation
-            "
+            className="flex flex-col items-center justify-center p-[5px] min-h-[120px] w-full border-2 border-gray-200 rounded-xl text-center hover:border-blue-400 hover:shadow-md active:scale-95 active:bg-blue-50 transition-all duration-100 touch-manipulation"
           >
-            <span className="text-4xl sm:text-5xl">{cat.icon}</span>
-            <span className="text-lg sm:text-2xl font-bold text-gray-800">{cat.label}</span>
-            <span className="hidden sm:block text-base text-gray-500">{cat.desc}</span>
-            <span className="text-xs sm:text-sm font-medium text-blue-600">{counts[cat.key] ?? 0}품목</span>
+            <span className="text-[30px] mb-2">{cat.icon}</span>
+            <span className="text-[20px] font-semibold text-gray-800">{cat.label}</span>
+            <span className="text-[15px] text-gray-500 hidden sm:block">{cat.desc}</span>
+            <span className="text-[15px] font-medium text-blue-600">{counts[cat.key] ?? 0}품목</span>
           </button>
         ))}
       </div>
