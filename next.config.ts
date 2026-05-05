@@ -1,6 +1,8 @@
 // cache invalidate
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  serverExternalPackages: ['@libsql/client'],
+};
 
 export default nextConfig;
