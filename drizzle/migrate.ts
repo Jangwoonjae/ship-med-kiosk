@@ -56,6 +56,10 @@ async function main() {
     )
   `);
 
+  await client.execute(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_medicines_name_en ON medicines(name_en)
+  `);
+
   const defaultPinHash = bcrypt.hashSync(process.env.ADMIN_PIN_DEFAULT ?? '1234', 10);
   await client.execute({ sql: 'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', args: ['admin_pin', defaultPinHash] });
   await client.execute({ sql: 'INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', args: ['ship_name', ''] });

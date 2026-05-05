@@ -50,7 +50,7 @@ async function main() {
   { category: '내용약', name_en: 'Amlodipine', name_ko: '암로디핀', brand_name: '노바스크정5mg', form: 'tab', strength: '5mg', indication: '고혈압, 협심증', std_intl: 30, std_dom: 15, current_qty: 30 },
   { category: '내용약', name_en: 'Nifedipine', name_ko: '니페디핀', brand_name: '아달라트캡슐10mg', form: 'cap', strength: '10mg', indication: '고혈압 응급', std_intl: 20, std_dom: 10, current_qty: 20 },
   { category: '내용약', name_en: 'Nitroglycerin', name_ko: '니트로글리세린', brand_name: '니트로글리세린설하정0.4mg', form: 'tab', strength: '0.4mg', indication: '협심증 발작', std_intl: 30, std_dom: 10, current_qty: 30 },
-  { category: '내용약', name_en: 'Tramadol', name_ko: '트라마돌', brand_name: '트리돌캡슐50mg', form: 'cap', strength: '50mg', indication: '중등도 통증', std_intl: 30, std_dom: 15, current_qty: 30 },
+  { category: '내용약', name_en: 'Tramadol Oral', name_ko: '트라마돌(경구)', brand_name: '트리돌캡슐50mg', form: 'cap', strength: '50mg', indication: '중등도 통증', std_intl: 30, std_dom: 15, current_qty: 30 },
   { category: '내용약', name_en: 'Codeine + Paracetamol', name_ko: '코데인+파라세타몰', brand_name: '코대원포르테정', form: 'tab', strength: '20mg/500mg', indication: '기침, 통증', std_intl: 30, std_dom: 15, current_qty: 30 },
   { category: '내용약', name_en: 'Dextromethorphan', name_ko: '덱스트로메토르판', brand_name: '메디폼정15mg', form: 'tab', strength: '15mg', indication: '기침', std_intl: 30, std_dom: 15, current_qty: 30 },
   { category: '내용약', name_en: 'Salbutamol', name_ko: '살부타몰', brand_name: '벤토린정2mg', form: 'tab', strength: '2mg', indication: '기관지 천식', std_intl: 30, std_dom: 15, current_qty: 30 },
@@ -76,9 +76,10 @@ async function main() {
 
   await client.batch(
     seedData.map(item => ({
-      sql: `INSERT OR IGNORE INTO medicines (category, name_en, name_ko, brand_name, form, strength, indication, std_intl, std_dom, current_qty)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [item.category, item.name_en, item.name_ko, item.brand_name, item.form, item.strength, item.indication, item.std_intl, item.std_dom, item.current_qty],
+      sql: `INSERT INTO medicines (category, name_en, name_ko, brand_name, form, strength, indication, std_intl, std_dom, current_qty)
+            SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            WHERE NOT EXISTS (SELECT 1 FROM medicines WHERE name_en = ?)`,
+      args: [item.category, item.name_en, item.name_ko, item.brand_name, item.form, item.strength, item.indication, item.std_intl, item.std_dom, item.current_qty, item.name_en],
     })),
     'write'
   );
