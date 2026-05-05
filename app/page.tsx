@@ -111,10 +111,8 @@ export default function CrewKiosk() {
           {[1, 2, 3, 4].map(s => (
             <span
               key={s}
-              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-sm ${step === s ? 'bg-white text-blue-700' : 'bg-blue-500 text-white'}`}
-            >
-              {s}
-            </span>
+              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full ${step === s ? 'bg-white' : 'bg-blue-400'}`}
+            />
           ))}
         </div>
       </header>
