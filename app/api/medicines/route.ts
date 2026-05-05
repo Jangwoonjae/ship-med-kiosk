@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
     const items = await listMedicines({ category, search, status: status ?? undefined, routeType });
     return NextResponse.json(items);
   } catch (e) {
-    return NextResponse.json({ error: '목록 조회 실패' }, { status: 500 });
+    console.error(e);
+    return Response.json({ error: String(e) }, { status: 500 });
   }
 }
 
