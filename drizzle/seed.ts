@@ -1,13 +1,14 @@
 import { createClient } from '@libsql/client';
 
-const url = process.env.TURSO_DATABASE_URL ?? 'file:./data/ship-med.db';
+async function main() {
+  const url = process.env.TURSO_DATABASE_URL ?? 'file:./data/ship-med.db';
 
-const client = createClient({
-  url,
-  authToken: process.env.TURSO_AUTH_TOKEN,
-});
+  const client = createClient({
+    url,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
 
-const seedData = [
+  const seedData = [
   // ── 주사약 (Injectables) ─────────────────────────────────────────────
   { category: '주사약', name_en: 'Lidocaine 1%', name_ko: '리도카인', brand_name: '휴온스리도카인염산염수화물주1%', form: 'vial', strength: '0.2g/20mL', indication: '국소마취', std_intl: 5, std_dom: 0, current_qty: 5 },
   { category: '주사약', name_en: 'Dexamethasone', name_ko: '덱사메타손', brand_name: '제일제약덱사메타손주사액', form: 'amp', strength: '5mg/1mL', indication: '중증 천식, 아나필락시스', std_intl: 5, std_dom: 0, current_qty: 5 },
@@ -73,14 +74,17 @@ const seedData = [
   { category: '외용약', name_en: 'Triangular Bandage', name_ko: '삼각붕대', brand_name: '삼각붕대', form: 'bandage', strength: '90×90×127cm', indication: '골절, 탈구 고정', std_intl: 5, std_dom: 3, current_qty: 5 },
 ];
 
-await client.batch(
-  seedData.map(item => ({
-    sql: `INSERT OR IGNORE INTO medicines (category, name_en, name_ko, brand_name, form, strength, indication, std_intl, std_dom, current_qty)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [item.category, item.name_en, item.name_ko, item.brand_name, item.form, item.strength, item.indication, item.std_intl, item.std_dom, item.current_qty],
-  })),
-  'write'
-);
+  await client.batch(
+    seedData.map(item => ({
+      sql: `INSERT OR IGNORE INTO medicines (category, name_en, name_ko, brand_name, form, strength, indication, std_intl, std_dom, current_qty)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [item.category, item.name_en, item.name_ko, item.brand_name, item.form, item.strength, item.indication, item.std_intl, item.std_dom, item.current_qty],
+    })),
+    'write'
+  );
 
-client.close();
-console.log(`Seeded ${seedData.length} medicines.`);
+  client.close();
+  console.log(`Seeded ${seedData.length} medicines.`);
+}
+
+main();
