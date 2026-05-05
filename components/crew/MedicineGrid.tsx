@@ -20,11 +20,11 @@ interface MedicineGridProps {
 
 export default function MedicineGrid({ items, selected, onToggle, onNext }: MedicineGridProps) {
   return (
-    <div className="flex flex-col h-full w-full max-w-4xl mx-auto px-4">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">의약품을 선택하세요 (복수 선택 가능)</h2>
+    <div className="flex flex-col items-center w-full px-4">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 self-start">의약품을 선택하세요 (복수 선택 가능)</h2>
 
-      <div className="flex-1 overflow-y-auto pb-24">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="w-full flex-1 overflow-y-auto pb-24">
+        <div className="grid portrait:grid-cols-2 landscape:grid-cols-4 gap-4 justify-items-center mx-auto w-full">
           {items.map(item => {
             const isSelected = selected.has(item.id);
             const isEmpty = item.status === 'empty';
@@ -34,7 +34,7 @@ export default function MedicineGrid({ items, selected, onToggle, onNext }: Medi
                 disabled={isEmpty}
                 onClick={() => onToggle(item.id)}
                 className={`
-                  flex flex-col gap-1.5 p-4 min-h-[90px]
+                  flex flex-col gap-1.5 p-4 min-h-[90px] w-full
                   rounded-xl border-2 text-left
                   transition-all duration-100
                   touch-manipulation

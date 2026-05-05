@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@custom-variant portrait {
+  @media (orientation: portrait) {
+    @slot;
+  }
+}
+
+@custom-variant landscape {
+  @media (orientation: landscape) {
+    @slot;
+  }
+}
+
 * {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;

@@ -15,7 +15,7 @@ interface CategorySelectProps {
 export default function CategorySelect({ counts, onSelect }: CategorySelectProps) {
   return (
     <div className="flex flex-col items-center gap-4 sm:gap-6 w-full max-w-3xl mx-auto px-4">
-      <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">분류를 선택하세요</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center">분류를 선택하세요</h2>
       <div className="grid grid-cols-3 gap-3 sm:gap-4 w-full">
         {CATEGORIES.map(cat => (
           <button

@@ -102,7 +102,7 @@ export default function CrewKiosk() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* 헤더 */}
-      <header className="bg-blue-700 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <header style={{ backgroundColor: '#1d4ed8' }} className="bg-blue-700 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold">선내 의약품 관리</h1>
           <p className="text-blue-200 text-xs sm:text-sm">선원 출고 시스템</p>

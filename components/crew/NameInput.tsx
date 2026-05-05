@@ -25,10 +25,10 @@ export default function NameInput({ onConfirm }: NameInputProps) {
 
   return (
     <div className="flex flex-col items-center gap-3 sm:gap-4 w-full max-w-2xl mx-auto px-4">
-      <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">이름을 입력하세요</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center">이름을 입력하세요</h2>
 
       <div className="w-full flex items-center gap-2 bg-white border-2 border-blue-400 rounded-2xl px-4 py-2 sm:py-3">
-        <span className="text-xl sm:text-2xl font-semibold flex-1 min-h-[36px] sm:min-h-[40px]">{name || <span className="text-gray-400">홍길동</span>}</span>
+        <span className="text-xl sm:text-2xl font-semibold flex-1 min-h-[36px] sm:min-h-[40px] text-center">{name || <span className="text-gray-400">홍길동</span>}</span>
         <TouchButton variant="ghost" size="sm" onClick={() => setName(n => n.slice(0, -1))}>⌫</TouchButton>
       </div>
 
