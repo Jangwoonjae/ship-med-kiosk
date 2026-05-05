@@ -87,15 +87,15 @@ export default function StockTable({ routeType }: StockTableProps) {
   return (
     <div className="space-y-4">
       {/* 요약 카드 */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: '전체', value: summary.total, color: 'bg-blue-50 text-blue-700' },
           { label: '정상', value: summary.normal, color: 'bg-green-50 text-green-700' },
           { label: '경고', value: summary.warning, color: 'bg-orange-50 text-orange-700' },
           { label: '긴급', value: summary.critical, color: 'bg-red-50 text-red-700' },
         ].map(s => (
-          <div key={s.label} className={`rounded-xl p-4 ${s.color}`}>
-            <div className="text-3xl font-bold">{s.value}</div>
+          <div key={s.label} className={`rounded-xl p-3 sm:p-4 ${s.color}`}>
+            <div className="text-2xl sm:text-3xl font-bold">{s.value}</div>
             <div className="text-sm">{s.label}</div>
           </div>
         ))}
@@ -168,7 +168,7 @@ export default function StockTable({ routeType }: StockTableProps) {
       {detail && (
         <div className="fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black/40" onClick={() => setDetail(null)} />
-          <div className="w-[420px] bg-white shadow-2xl p-6 overflow-y-auto flex flex-col gap-5">
+          <div className="w-full sm:w-[420px] bg-white shadow-2xl p-4 sm:p-6 overflow-y-auto flex flex-col gap-5">
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-xl font-bold">{detail.name_ko}</h3>

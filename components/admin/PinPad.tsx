@@ -59,14 +59,14 @@ export default function PinPad({ onSuccess }: PinPadProps) {
 
       {error && <p className="text-red-400">{error}</p>}
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {['1','2','3','4','5','6','7','8','9'].map(k => (
           <button
             key={k}
             onClick={() => handleKey(k)}
             className="
-              w-20 h-20 rounded-2xl bg-gray-700 text-white
-              text-3xl font-bold
+              w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-700 text-white
+              text-2xl sm:text-3xl font-bold
               hover:bg-gray-600 active:bg-gray-500 active:scale-95
               transition-all duration-100 touch-manipulation
             "
@@ -76,16 +76,16 @@ export default function PinPad({ onSuccess }: PinPadProps) {
         ))}
         <button
           onClick={handleClear}
-          className="w-20 h-20 rounded-2xl bg-gray-700 text-gray-300 text-lg font-medium hover:bg-gray-600 active:scale-95 transition-all duration-100 touch-manipulation"
+          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-700 text-gray-300 text-base sm:text-lg font-medium hover:bg-gray-600 active:scale-95 transition-all duration-100 touch-manipulation"
         >취소</button>
         <button
           onClick={() => handleKey('0')}
-          className="w-20 h-20 rounded-2xl bg-gray-700 text-white text-3xl font-bold hover:bg-gray-600 active:scale-95 transition-all duration-100 touch-manipulation"
+          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-700 text-white text-2xl sm:text-3xl font-bold hover:bg-gray-600 active:scale-95 transition-all duration-100 touch-manipulation"
         >0</button>
         <button
           onClick={handleSubmit}
           disabled={pin.length !== 4 || loading}
-          className="w-20 h-20 rounded-2xl bg-blue-600 text-white text-lg font-bold hover:bg-blue-500 active:scale-95 disabled:opacity-40 transition-all duration-100 touch-manipulation"
+          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-blue-600 text-white text-base sm:text-lg font-bold hover:bg-blue-500 active:scale-95 disabled:opacity-40 transition-all duration-100 touch-manipulation"
         >확인</button>
       </div>
     </div>

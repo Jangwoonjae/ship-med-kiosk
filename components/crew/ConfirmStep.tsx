@@ -35,10 +35,10 @@ export default function ConfirmStep({ actor, items, onConfirm, onBack }: Confirm
 
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto px-4 gap-4">
-      <h2 className="text-2xl font-bold text-gray-800">수량을 확인하세요</h2>
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-800">수량을 확인하세요</h2>
       <p className="text-gray-500">이름: <strong>{actor}</strong></p>
 
-      <div className="space-y-3 mb-4">
+      <div className="space-y-3 mb-4 max-h-[55vh] overflow-y-auto pr-1">
         {items.map(item => (
           <div key={item.id} className="flex items-center bg-white border border-gray-200 rounded-xl p-4 gap-3">
             <div className="flex-1">

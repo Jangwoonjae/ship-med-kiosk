@@ -102,16 +102,16 @@ export default function CrewKiosk() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* 헤더 */}
-      <header className="bg-blue-700 text-white px-6 py-4 flex items-center justify-between">
+      <header className="bg-blue-700 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">선내 의약품 관리</h1>
-          <p className="text-blue-200 text-sm">선원 출고 시스템</p>
+          <h1 className="text-xl sm:text-2xl font-bold">선내 의약품 관리</h1>
+          <p className="text-blue-200 text-xs sm:text-sm">선원 출고 시스템</p>
         </div>
-        <div className="flex gap-2 text-sm">
+        <div className="flex gap-1.5 sm:gap-2">
           {[1, 2, 3, 4].map(s => (
             <span
               key={s}
-              className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${step === s ? 'bg-white text-blue-700' : 'bg-blue-500 text-white'}`}
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-sm ${step === s ? 'bg-white text-blue-700' : 'bg-blue-500 text-white'}`}
             >
               {s}
             </span>
@@ -119,37 +119,39 @@ export default function CrewKiosk() {
         </div>
       </header>
 
-      {/* 본문 */}
-      <main className="flex-1 flex items-center justify-center py-8 overflow-y-auto">
-        {step === 1 && (
-          <NameInput onConfirm={name => { setActor(name); setStep(2); }} />
-        )}
-        {step === 2 && (
-          <CategorySelect
-            counts={categoryCounts}
-            onSelect={cat => { setCategory(cat); setStep(3); }}
-          />
-        )}
-        {step === 3 && (
-          <MedicineGrid
-            items={getMedicineItems()}
-            selected={selected}
-            onToggle={id => setSelected(prev => {
-              const next = new Set(prev);
-              next.has(id) ? next.delete(id) : next.add(id);
-              return next;
-            })}
-            onNext={() => setStep(4)}
-          />
-        )}
-        {step === 4 && (
-          <ConfirmStep
-            actor={actor}
-            items={getMedicineItems().filter(m => selected.has(m.id))}
-            onConfirm={handleDispense}
-            onBack={() => setStep(3)}
-          />
-        )}
+      {/* 본문 — overflow-y-auto를 main에, items-center는 내부 div에 */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="min-h-full flex items-center justify-center py-6 sm:py-8">
+          {step === 1 && (
+            <NameInput onConfirm={name => { setActor(name); setStep(2); }} />
+          )}
+          {step === 2 && (
+            <CategorySelect
+              counts={categoryCounts}
+              onSelect={cat => { setCategory(cat); setStep(3); }}
+            />
+          )}
+          {step === 3 && (
+            <MedicineGrid
+              items={getMedicineItems()}
+              selected={selected}
+              onToggle={id => setSelected(prev => {
+                const next = new Set(prev);
+                next.has(id) ? next.delete(id) : next.add(id);
+                return next;
+              })}
+              onNext={() => setStep(4)}
+            />
+          )}
+          {step === 4 && (
+            <ConfirmStep
+              actor={actor}
+              items={getMedicineItems().filter(m => selected.has(m.id))}
+              onConfirm={handleDispense}
+              onBack={() => setStep(3)}
+            />
+          )}
+        </div>
       </main>
 
       {/* 관리자 링크 */}
