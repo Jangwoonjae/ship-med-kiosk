@@ -46,3 +46,9 @@ data/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temp / backup files
+변경파일/
+check-db.mjs
+fix-pin.mjs
+fix-pin.mjs.txt

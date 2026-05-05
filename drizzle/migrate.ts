@@ -1,3 +1,4 @@
+#!/usr/bin/env tsx
 import { createClient } from '@libsql/client';
 import bcrypt from 'bcryptjs';
 import path from 'path';
