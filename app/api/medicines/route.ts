@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listMedicines, createMedicine, getSummaryStats } from '@/lib/medicines';
 
+console.log('TURSO_URL:', process.env.TURSO_DATABASE_URL?.slice(0,30))
+console.log('TURSO_TOKEN exists:', !!process.env.TURSO_AUTH_TOKEN)
+
 export async function GET(req: NextRequest) {
   try {
     const sp = req.nextUrl.searchParams;
