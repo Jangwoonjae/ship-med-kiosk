@@ -41,6 +41,10 @@ export default function StockTable({ routeType }: StockTableProps) {
   const [detail, setDetail] = useState<Medicine | null>(null);
   const [adjDelta, setAdjDelta] = useState(0);
   const [history, setHistory] = useState<TxRow[]>([]);
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState<Partial<Medicine> | null>(null);
+  const [editMsg, setEditMsg] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   const load = () => {
     const q = new URLSearchParams({ routeType });
@@ -82,6 +86,66 @@ export default function StockTable({ routeType }: StockTableProps) {
     load();
   };
 
+  const handleEditSave = async () => {
+    if (!detail || !editData) return;
+    const res = await fetch(`/api/medicines/${detail.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editData),
+    });
+    if (res.ok) {
+      setEditMsg('✅ 저장 완료');
+      load();
+      setEditMode(false);
+    } else {
+      setEditMsg('저장 실패');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!detail) return;
+    const confirmed = confirm(
+      `"${detail.name_ko}" 품목을 삭제하시겠습니까?\n\n` +
+      '해당 품목의 입출고 이력도 함께 삭제됩니다.\n' +
+      '이 작업은 되돌릴 수 없습니다.'
+    );
+    if (!confirmed) return;
+    setDeleting(true);
+    const res = await fetch(`/api/medicines/${detail.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setDetail(null);
+      setEditMode(false);
+      load();
+    } else {
+      alert('삭제 실패');
+    }
+    setDeleting(false);
+  };
+
+  const handleExportCsv = async () => {
+    const res = await fetch(`/api/export/stock-csv?route=${routeType}`);
+    if (!res.ok) { alert('CSV 생성 실패'); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `재고현황_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportDoc = async () => {
+    const res = await fetch(`/api/export/stock-report?route=${routeType}`);
+    if (!res.ok) { alert('DOC 생성 실패'); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `재고현황_${new Date().toISOString().slice(0, 10)}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const stdQty = (m: Medicine) => routeType === 'international' ? m.std_intl : m.std_dom;
 
   return (
@@ -121,6 +185,22 @@ export default function StockTable({ routeType }: StockTableProps) {
           <option value="critical">긴급</option>
           <option value="empty">품절</option>
         </select>
+      </div>
+
+      {/* 내보내기 버튼 */}
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={handleExportCsv}
+          className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+        >
+          📊 CSV 출력
+        </button>
+        <button
+          onClick={handleExportDoc}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+        >
+          📄 DOC 출력
+        </button>
       </div>
 
       {/* 테이블 */}
@@ -167,14 +247,14 @@ export default function StockTable({ routeType }: StockTableProps) {
       {/* 상세 슬라이드오버 */}
       {detail && (
         <div className="fixed inset-0 z-50 flex">
-          <div className="flex-1 bg-black/40" onClick={() => setDetail(null)} />
+          <div className="flex-1 bg-black/40" onClick={() => { setDetail(null); setEditMode(false); setEditMsg(''); }} />
           <div className="w-full sm:w-[420px] bg-white shadow-2xl p-4 sm:p-6 overflow-y-auto flex flex-col gap-5">
             <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-xl font-bold">{detail.name_ko}</h3>
                 <p className="text-sm text-gray-500">{detail.name_en}</p>
               </div>
-              <button onClick={() => setDetail(null)} className="text-gray-400 text-2xl leading-none">✕</button>
+              <button onClick={() => { setDetail(null); setEditMode(false); setEditMsg(''); }} className="text-gray-400 text-2xl leading-none">✕</button>
             </div>
 
             <div className="space-y-1.5 text-sm bg-gray-50 rounded-xl p-4">
@@ -221,6 +301,120 @@ export default function StockTable({ routeType }: StockTableProps) {
                       </span>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* 수정/삭제 */}
+            <div className="border-t pt-4 space-y-2">
+              {!editMode ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setEditMode(true);
+                      setEditMsg('');
+                      setEditData({
+                        category: detail.category,
+                        name_ko: detail.name_ko,
+                        name_en: detail.name_en,
+                        brand_name: detail.brand_name,
+                        form: detail.form,
+                        strength: detail.strength,
+                        indication: detail.indication,
+                        std_intl: detail.std_intl,
+                        std_dom: detail.std_dom,
+                        barcode: detail.barcode ?? '',
+                      });
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium"
+                  >
+                    ✏️ 품목 정보 수정
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                  >
+                    🗑️ 품목 삭제
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-gray-700">품목 정보 수정</h4>
+
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">분류</label>
+                    <div className="flex gap-2">
+                      {['주사약', '내용약', '외용약'].map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setEditData(p => ({ ...p, category: cat }))}
+                          className={`flex-1 py-1.5 rounded-lg border text-sm ${
+                            editData?.category === cat
+                              ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                              : 'border-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">성분명(한글)</label>
+                      <input type="text" value={editData?.name_ko ?? ''} onChange={e => setEditData(p => ({ ...p, name_ko: e.target.value }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">성분명(영문)</label>
+                      <input type="text" value={editData?.name_en ?? ''} onChange={e => setEditData(p => ({ ...p, name_en: e.target.value }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">상품명</label>
+                      <input type="text" value={editData?.brand_name ?? ''} onChange={e => setEditData(p => ({ ...p, brand_name: e.target.value }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">제형</label>
+                      <input type="text" value={editData?.form ?? ''} onChange={e => setEditData(p => ({ ...p, form: e.target.value }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">함량</label>
+                      <input type="text" value={editData?.strength ?? ''} onChange={e => setEditData(p => ({ ...p, strength: e.target.value }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">바코드</label>
+                      <input type="text" value={editData?.barcode ?? ''} onChange={e => setEditData(p => ({ ...p, barcode: e.target.value }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">국제선 기준수량</label>
+                      <input type="number" min={0} value={editData?.std_intl ?? 0} onChange={e => setEditData(p => ({ ...p, std_intl: Number(e.target.value) }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">국내선 기준수량</label>
+                      <input type="number" min={0} value={editData?.std_dom ?? 0} onChange={e => setEditData(p => ({ ...p, std_dom: Number(e.target.value) }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                  </div>
+
+                  {editMsg && (
+                    <div className={`p-2 rounded text-sm ${editMsg.startsWith('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      {editMsg}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <button onClick={handleEditSave} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">저장</button>
+                    <button onClick={() => { setEditMode(false); setEditMsg(''); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium">취소</button>
+                  </div>
                 </div>
               )}
             </div>

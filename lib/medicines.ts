@@ -76,6 +76,12 @@ export async function updateMedicine(id: number, data: Partial<schema.NewMedicin
     .get();
 }
 
+export async function deleteMedicine(id: number) {
+  const { transactions } = schema;
+  await db.delete(transactions).where(eq(transactions.medicine_id, id)).run();
+  await db.delete(medicines).where(eq(medicines.id, id)).run();
+}
+
 export async function getSummaryStats(routeType = 'international') {
   const all = await listMedicines({ routeType });
   const stats = { total: all.length, normal: 0, warning: 0, critical: 0 };

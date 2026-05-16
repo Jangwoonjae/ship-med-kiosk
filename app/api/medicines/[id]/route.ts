@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getMedicineById, updateMedicine, updateMedicineQty } from '@/lib/medicines';
+import { getMedicineById, updateMedicine, updateMedicineQty, deleteMedicine } from '@/lib/medicines';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,5 +25,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : '수정 실패';
     return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  try {
+    const { id } = await params;
+    await deleteMedicine(Number(id));
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '삭제 실패';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
