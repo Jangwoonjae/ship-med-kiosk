@@ -24,7 +24,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col" suppressHydrationWarning>
       <header style={{ backgroundColor: '#1e3a5f' }} className="bg-gray-900 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div>
           <h1 className="text-base sm:text-xl font-bold">선내 의약품 관리 — 관리자</h1>

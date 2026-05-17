@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next build && next start",
     "db:migrate": "tsx drizzle/migrate.ts",
     "db:seed": "tsx drizzle/seed.ts",
     "db:setup": "npm run db:migrate && npm run db:seed"
@@ -13,6 +13,7 @@
   "dependencies": {
     "@libsql/client": "^0.17.3",
     "bcryptjs": "^3.0.3",
+    "docx": "^9.6.1",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.4",
     "react": "19.2.4",

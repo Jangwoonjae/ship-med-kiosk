@@ -93,6 +93,32 @@ export default function Settings({ onRouteTypeChange }: SettingsProps) {
     }
   };
 
+  const handleReset = async () => {
+    const confirmed = confirm(
+      '시스템을 초기화하시겠습니까?\n\n' +
+      '• 입출고 이력 전체 삭제\n' +
+      '• 재고를 현재 항로 기준수량으로 복원\n\n' +
+      '이 작업은 되돌릴 수 없습니다.'
+    );
+    if (!confirmed) return;
+
+    const reconfirmed = confirm('정말로 초기화하시겠습니까?');
+    if (!reconfirmed) return;
+
+    try {
+      const res = await fetch('/api/reset', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        alert(`초기화가 완료되었습니다.\n${data.message}`);
+        window.location.reload();
+      } else {
+        alert('초기화 실패: ' + data.error);
+      }
+    } catch {
+      alert('오류가 발생했습니다.');
+    }
+  };
+
   const catOrder = ['주사약', '내용약', '외용약'];
   const grouped = catOrder.map(cat => ({
     cat,
@@ -231,6 +257,25 @@ export default function Settings({ onRouteTypeChange }: SettingsProps) {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* 시스템 초기화 */}
+      <div className="mt-8 border border-red-200 rounded-lg p-4 bg-red-50">
+        <h3 className="text-red-700 font-semibold text-lg mb-2">⚠️ 시스템 초기화</h3>
+        <p className="text-sm text-red-600 mb-1">아래 항목이 초기화됩니다:</p>
+        <ul className="text-sm text-red-600 mb-4 list-disc list-inside">
+          <li>입출고 이력 전체 삭제</li>
+          <li>재고를 현재 항로 설정 기준수량으로 복원<br />
+            (국제선 설정 시 국제선 기준수량 / 국내선 설정 시 국내선 기준수량)
+          </li>
+        </ul>
+        <p className="text-xs text-red-500 mb-4">⚠️ 이 작업은 되돌릴 수 없습니다.</p>
+        <button
+          onClick={handleReset}
+          className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium w-full sm:w-auto"
+        >
+          🔄 시스템 초기화
+        </button>
       </div>
     </div>
   );
