@@ -1,4 +1,5 @@
-import cheerio from 'cheerio';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const cheerio = require('cheerio');
 
 const BASE_URL = process.env.BARCODE_SITE_URL ?? 'https://as21.net/mr7';
 const SITE_ID  = process.env.BARCODE_SITE_ID ?? '';
