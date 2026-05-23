@@ -34,7 +34,8 @@ export async function GET() {
       ok: true,
       message: 'name_en NOT NULL 제약 제거 완료',
       count: count.rows[0],
-      nameEnNullable: info.rows.find((r: { name?: unknown }) => r.name === 'name_en'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      nameEnNullable: info.rows.find((r: any) => r.name === 'name_en'),
     });
   } catch (e) {
     return Response.json({ ok: false, error: String(e) });
