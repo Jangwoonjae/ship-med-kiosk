@@ -47,7 +47,38 @@ export async function GET() {
       sampleError = String(e);
     }
 
-    return NextResponse.json({ connected: true, results, sample, sampleError });
+    let prBase: any[] = [];
+    let prBaseError: string | null = null;
+    try {
+      const prBaseRes = await pool.request().query(
+        'SELECT TOP 5 ProductID, ProductName, Spec, Barcode, Barcode3 FROM tm_ReadBarcodePrBase'
+      );
+      prBase = prBaseRes.recordset;
+    } catch (e) {
+      prBaseError = String(e);
+    }
+
+    let countInBox: number | null = null;
+    let countPrBase: number | null = null;
+    let countError: string | null = null;
+    try {
+      const c1 = await pool.request().query('SELECT COUNT(*) as cnt FROM tblBarcodeinBox');
+      const c2 = await pool.request().query('SELECT COUNT(*) as cnt FROM tm_ReadBarcodePrBase');
+      countInBox  = c1.recordset[0]?.cnt ?? null;
+      countPrBase = c2.recordset[0]?.cnt ?? null;
+    } catch (e) {
+      countError = String(e);
+    }
+
+    return NextResponse.json({
+      connected: true,
+      results,
+      sample,
+      sampleError,
+      prBase,
+      prBaseError,
+      counts: { tblBarcodeinBox: countInBox, tm_ReadBarcodePrBase: countPrBase, error: countError },
+    });
   } catch (error) {
     return NextResponse.json({
       connected: false,
