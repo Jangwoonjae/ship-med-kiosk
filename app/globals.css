@@ -1,16 +1,6 @@
-@import "tailwindcss";
-
-@custom-variant portrait {
-  @media (orientation: portrait) {
-    @slot;
-  }
-}
-
-@custom-variant landscape {
-  @media (orientation: landscape) {
-    @slot;
-  }
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 * {
   touch-action: manipulation;
