@@ -11,6 +11,7 @@ export async function GET() {
 
   let loginStatus: number | null = null;
   let loginCookie: string | null = null;
+  let loginHtmlPreview: string | null = null;
   let loginError: string | null = null;
 
   try {
@@ -33,9 +34,10 @@ export async function GET() {
         : [loginRes.headers.get('set-cookie') ?? ''].filter(Boolean);
 
     loginCookie = rawCookies.map(c => c.split(';')[0]).join('; ');
+    loginHtmlPreview = (await loginRes.text()).slice(0, 1000);
   } catch (e) {
     loginError = String(e);
-    return NextResponse.json({ loginStatus, loginCookie, loginError });
+    return NextResponse.json({ loginStatus, loginCookie, loginHtmlPreview, loginError });
   }
 
   // 2. 바코드 검색
@@ -58,7 +60,7 @@ export async function GET() {
 
     searchStatus = searchRes.status;
     const html = await searchRes.text();
-    searchHtmlPreview = html.slice(0, 2000);
+    searchHtmlPreview = html.slice(0, 5000);
   } catch (e) {
     searchError = String(e);
   }
@@ -66,6 +68,7 @@ export async function GET() {
   return NextResponse.json({
     loginStatus,
     loginCookie,
+    loginHtmlPreview,
     loginError,
     searchStatus,
     searchHtmlPreview,
