@@ -77,6 +77,14 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
           indication: sd.company ?? '',
           barcode: code.trim(),
         });
+        setNewMed(prev => ({
+          ...prev,
+          name_ko: sd.name ?? '',
+          brand_name: sd.name ?? '',
+          barcode: sd.barcode ?? code.trim(),
+          form: sd.form ?? '',
+        }));
+        setShowNewForm(true);
         setMsg('as21.net에서 조회됨. 아래 정보를 확인하고 신규 등록하세요.');
       } else {
         setMsg(data.error ?? '바코드 미확인 — 수동 입력으로 진행하세요.');
@@ -222,7 +230,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
               />
             </div>
             <div>
-              <label className="text-sm text-gray-600 block mb-1">성분명(영문)</label>
+              <label className="text-sm text-gray-600 block mb-1">성분명(영문) <span className="text-gray-400 text-xs">(선택)</span></label>
               <input
                 type="text"
                 value={newMed.name_en}
@@ -433,7 +441,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
               <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={newForm.name_ko} onChange={e => setField('name_ko', e.target.value)} />
             </div>
             <div>
-              <label className="block text-gray-600 mb-0.5">영문명 *</label>
+              <label className="block text-gray-600 mb-0.5">영문명 <span className="text-gray-400 text-xs">(선택)</span></label>
               <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={newForm.name_en} onChange={e => setField('name_en', e.target.value)} />
             </div>
             <div>
@@ -486,7 +494,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
               variant="primary"
               size="sm"
               onClick={handleRegisterNew}
-              disabled={loading || !newForm.name_ko || !newForm.name_en}
+              disabled={loading || !newForm.name_ko}
               className="flex-1"
             >
               신규 등록 + 입고

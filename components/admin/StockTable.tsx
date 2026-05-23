@@ -208,7 +208,7 @@ export default function StockTable({ routeType }: StockTableProps) {
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-600">
             <tr>
-              {['성분명', '분류', '현재고', '기준수량', '상태', '조정'].map(h => (
+              {['성분명', '분류', '현재고', '기준수량', '상태', '바코드', '조정'].map(h => (
                 <th key={h} className="px-3 py-3 text-left font-medium">{h}</th>
               ))}
             </tr>
@@ -231,6 +231,7 @@ export default function StockTable({ routeType }: StockTableProps) {
                   <td className="px-3 py-3 font-bold">{m.current_qty}</td>
                   <td className="px-3 py-3">{std}</td>
                   <td className="px-3 py-3"><StatusBadge status={status} /></td>
+                  <td className="px-3 py-3 text-sm text-gray-600">{m.barcode ?? '-'}</td>
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                       <button className="w-8 h-8 bg-gray-200 rounded text-lg hover:bg-gray-300" onClick={e => { e.stopPropagation(); setDetail(m); setAdjDelta(-1); }}>−</button>
@@ -264,9 +265,7 @@ export default function StockTable({ routeType }: StockTableProps) {
               <p><span className="text-gray-500 w-20 inline-block">효능</span> {detail.indication}</p>
               <p><span className="text-gray-500 w-20 inline-block">현재고</span> <strong>{detail.current_qty}</strong></p>
               <p><span className="text-gray-500 w-20 inline-block">기준수량</span> 국제 {detail.std_intl} / 국내 {detail.std_dom}</p>
-              {detail.barcode && (
-                <p><span className="text-gray-500 w-20 inline-block">바코드</span> <code className="bg-white border rounded px-1">{detail.barcode}</code></p>
-              )}
+              <p><span className="text-gray-500 w-20 inline-block">바코드</span> {detail.barcode ? <code className="bg-white border rounded px-1">{detail.barcode}</code> : '미등록'}</p>
             </div>
 
             <div>
