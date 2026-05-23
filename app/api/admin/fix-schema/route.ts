@@ -1,19 +1,25 @@
-import { NextResponse } from 'next/server';
 import { client } from '@/lib/db';
 
-async function run() {
-  await client.execute('DROP INDEX IF EXISTS idx_medicines_name_en');
-  return NextResponse.json({ ok: true, message: 'idx_medicines_name_en dropped' });
-}
-
 export async function GET() {
-  try { return await run(); } catch (e) {
-    return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });
+  try {
+    const indexes = await client.execute("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='medicines'");
+
+    await client.execute('DROP INDEX IF EXISTS idx_medicines_name_en');
+    await client.execute('DROP INDEX IF EXISTS medicines_name_en_unique');
+    await client.execute('DROP INDEX IF EXISTS medicines_name_en_idx');
+
+    const tableInfo = await client.execute('PRAGMA table_info(medicines)');
+
+    return Response.json({
+      ok: true,
+      indexes: indexes.rows,
+      tableInfo: tableInfo.rows,
+    });
+  } catch (e) {
+    return Response.json({ ok: false, error: String(e) });
   }
 }
 
 export async function POST() {
-  try { return await run(); } catch (e) {
-    return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });
-  }
+  return GET();
 }
