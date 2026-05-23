@@ -43,7 +43,21 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [newForm, setNewForm] = useState<NewMedicineForm | null>(null);
+  const [similarMeds, setSimilarMeds] = useState<Medicine[]>([]);
+  const [pendingNewForm, setPendingNewForm] = useState<NewMedicineForm | null>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+
+  const extractKeyword = (name: string): string => {
+    const first = name.trim().split(/\s+/)[0];
+    return first.slice(0, 4);
+  };
+
+  const detectCategory = (name: string): '내용약' | '주사약' | '외용약' => {
+    const n = name.toLowerCase();
+    if (/주사|injection|amp|vial/.test(n)) return '주사약';
+    if (/크림|연고|gel|cream|oint/.test(n)) return '외용약';
+    return '내용약';
+  };
 
   useEffect(() => {
     barcodeInputRef.current?.focus();
@@ -61,16 +75,32 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
         setNewForm(null);
       } else if (data.matched && data.scrapeData) {
         const sd = data.scrapeData;
-        setNewForm({
+        const formData: NewMedicineForm = {
           ...EMPTY_FORM,
           name_ko: sd.name ?? '',
           name_en: '',
           brand_name: sd.name ?? '',
+          category: detectCategory((sd.name ?? '') + ' ' + (sd.form ?? '')),
           form: sd.form ?? '',
           indication: sd.company ?? '',
           barcode: sd.barcode ?? code.trim(),
-        });
-        setMsg('as21.net에서 조회됨. 아래 정보를 확인하고 신규 등록하세요.');
+        };
+        const keyword = extractKeyword(sd.name ?? '');
+        if (keyword.length >= 2) {
+          const simRes = await fetch(`/api/medicines?search=${encodeURIComponent(keyword)}`);
+          const simData: Medicine[] = await simRes.json();
+          if (simData.length > 0) {
+            setSimilarMeds(simData);
+            setPendingNewForm(formData);
+            setMsg(`as21.net 조회 완료 — "${keyword}" 유사 품목 ${simData.length}개 발견`);
+          } else {
+            setNewForm(formData);
+            setMsg('as21.net에서 조회됨. 아래 정보를 확인하고 신규 등록하세요.');
+          }
+        } else {
+          setNewForm(formData);
+          setMsg('as21.net에서 조회됨. 아래 정보를 확인하고 신규 등록하세요.');
+        }
       } else {
         setMsg(data.error ?? '바코드 미확인 — 수동 입력으로 진행하세요.');
       }
@@ -202,6 +232,36 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
         </div>
       )}
 
+      {/* 유사 품목 발견 시 선택 프롬프트 */}
+      {similarMeds.length > 0 && pendingNewForm && (
+        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 space-y-3">
+          <h3 className="font-bold text-yellow-800">유사 품목 발견</h3>
+          <p className="text-sm text-yellow-700">"{pendingNewForm.name_ko}"와 유사한 기존 품목이 있습니다. 기존 품목에 입고하시겠습니까?</p>
+          <div className="space-y-2">
+            {similarMeds.map(m => (
+              <div key={m.id} className="bg-white rounded-lg px-3 py-2 flex justify-between items-center border">
+                <div>
+                  <span className="font-medium text-sm">{m.name_ko}</span>
+                  <span className="text-gray-400 text-xs ml-2">재고: {m.current_qty}</span>
+                </div>
+                <TouchButton variant="primary" size="sm" onClick={() => {
+                  setFound(m);
+                  setSimilarMeds([]);
+                  setPendingNewForm(null);
+                  setMsg('');
+                }}>기존 품목에 입고</TouchButton>
+              </div>
+            ))}
+          </div>
+          <TouchButton variant="ghost" size="sm" className="w-full" onClick={() => {
+            setNewForm(pendingNewForm);
+            setSimilarMeds([]);
+            setPendingNewForm(null);
+            setMsg('');
+          }}>신규 등록</TouchButton>
+        </div>
+      )}
+
       {/* 기존 품목 입고 */}
       {found && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
@@ -253,6 +313,9 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
               <select className="w-full border rounded-lg px-2 py-1.5 text-sm" value={newForm.category} onChange={e => setField('category', e.target.value)}>
                 <option>내용약</option><option>주사약</option><option>외용약</option>
               </select>
+              <span className="text-xs text-blue-500 mt-0.5 block">
+                자동 감지: {detectCategory(newForm.name_ko + ' ' + newForm.brand_name + ' ' + newForm.form)}
+              </span>
             </div>
             <div>
               <label className="block text-gray-600 mb-0.5">제형</label>

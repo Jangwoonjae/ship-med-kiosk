@@ -25,7 +25,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const item = await createMedicine({ ...body, name_en: body.name_en ?? '' });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _id, created_at: _ca, updated_at: _ua, ...rest } = body;
+    const item = await createMedicine({ ...rest, name_en: rest.name_en ?? '' });
     return NextResponse.json(item, { status: 201 });
   } catch (e) {
     const msg = e instanceof Error ? e.message : '등록 실패';
