@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import TouchButton from '../ui/TouchButton';
 
 interface PinPadProps {
   onSuccess: () => void;
@@ -35,57 +34,93 @@ export default function PinPad({ onSuccess }: PinPadProps) {
         setPin('');
       }
     } catch {
-      setError('인증 오류가 발생했습니다.');
+      setError('서버 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 gap-6">
-      <h1 className="text-white text-3xl font-bold">관리자 인증</h1>
-      <p className="text-gray-400">PIN 4자리를 입력하세요</p>
+    <div style={{ backgroundColor: '#1d4ed8' }} className="flex flex-col items-center justify-center min-h-screen gap-8">
+      <h1 className="text-white font-bold" style={{ fontSize: '30px' }}>관리자 인증</h1>
+      <p className="text-blue-200" style={{ fontSize: '15px' }}>PIN 4자리를 입력하세요</p>
 
       <div className="flex gap-4 my-2">
         {[0, 1, 2, 3].map(i => (
           <div
             key={i}
-            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${i < pin.length ? 'bg-blue-500 border-blue-500' : 'border-gray-400'}`}
-          >
-            {i < pin.length && <span className="text-white text-2xl">●</span>}
-          </div>
+            style={{ width: '56px', height: '56px' }}
+            className={`rounded-full border-2 flex items-center justify-center ${
+              i < pin.length ? 'bg-white border-white' : 'border-white border-opacity-60'
+            }`}
+          />
         ))}
       </div>
 
-      {error && <p className="text-red-400">{error}</p>}
+      {error && <p className="text-red-300" style={{ fontSize: '15px' }}>{error}</p>}
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {['1','2','3','4','5','6','7','8','9'].map(k => (
           <button
             key={k}
             onClick={() => handleKey(k)}
-            className="
-              w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-700 text-white
-              text-2xl sm:text-3xl font-bold
-              hover:bg-gray-600 active:bg-gray-500 active:scale-95
-              transition-all duration-100 touch-manipulation
-            "
+            style={{
+              width: '88px',
+              height: '88px',
+              fontSize: '28px',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              color: 'white',
+              borderRadius: '16px',
+              fontWeight: 'bold',
+              border: 'none',
+              cursor: 'pointer',
+            }}
           >
             {k}
           </button>
         ))}
         <button
           onClick={handleClear}
-          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-700 text-gray-300 text-base sm:text-lg font-medium hover:bg-gray-600 active:scale-95 transition-all duration-100 touch-manipulation"
+          style={{
+            width: '88px',
+            height: '88px',
+            fontSize: '15px',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            color: 'white',
+            borderRadius: '16px',
+            fontWeight: 'bold',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >취소</button>
         <button
           onClick={() => handleKey('0')}
-          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gray-700 text-white text-2xl sm:text-3xl font-bold hover:bg-gray-600 active:scale-95 transition-all duration-100 touch-manipulation"
+          style={{
+            width: '88px',
+            height: '88px',
+            fontSize: '28px',
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            color: 'white',
+            borderRadius: '16px',
+            fontWeight: 'bold',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >0</button>
         <button
           onClick={handleSubmit}
           disabled={pin.length !== 4 || loading}
-          className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-blue-600 text-white text-base sm:text-lg font-bold hover:bg-blue-500 active:scale-95 disabled:opacity-40 transition-all duration-100 touch-manipulation"
+          style={{
+            width: '88px',
+            height: '88px',
+            fontSize: '15px',
+            backgroundColor: pin.length === 4 ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
+            color: pin.length === 4 ? '#1d4ed8' : 'white',
+            borderRadius: '16px',
+            fontWeight: 'bold',
+            border: 'none',
+            cursor: 'pointer',
+          }}
         >확인</button>
       </div>
     </div>
