@@ -52,9 +52,8 @@ export async function searchBarcodeFromSite(barcode: string): Promise<{
   try {
     const cookie = await getSession();
 
-    const searchRes = await fetch(
-      `${BASE_URL}/dFindDicNor.asp?sortCol=0&sortDir=desc&displayLength=10&search=${encodeURIComponent(barcode)}`,
-      {
+    const searchUrl = 'https://as21.net/mr7/dFindDicNor.asp?sortCol=0&sortDir=desc&displayLength=10&search=' + encodeURIComponent(barcode);
+    const searchRes = await fetch(searchUrl, {
         method: 'GET',
         headers: {
           'User-Agent': 'Mozilla/5.0',
