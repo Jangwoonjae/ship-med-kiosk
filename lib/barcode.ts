@@ -44,7 +44,7 @@ export async function lookupBarcode(barcode: string): Promise<{
       error: scraped.error ?? '등록되지 않은 바코드입니다.',
     };
   } catch (error) {
-    console.error('MSSQL 상세 오류:', error);
+    console.error('MSSQL 바코드 쿼리 오류:', error);
     return { matched: false, source: 'none', error: String(error) };
   }
 }

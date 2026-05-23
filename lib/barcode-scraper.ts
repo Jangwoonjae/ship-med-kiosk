@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const cheerio = require('cheerio');
+/// <reference types="cheerio" />
 
 const BASE_URL = process.env.BARCODE_SITE_URL ?? 'https://as21.net/mr7';
 const SITE_ID  = process.env.BARCODE_SITE_ID ?? '';
@@ -68,6 +67,7 @@ export async function searchBarcodeFromSite(barcode: string): Promise<{
     );
 
     const html = await searchRes.text();
+    const cheerio = await import('cheerio');
     const $ = cheerio.load(html);
 
     if (html.includes('loginP.asp') || $('form input[name="webId"]').length > 0) {
