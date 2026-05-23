@@ -66,17 +66,18 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
       if (data.matched && data.medicine) {
         setFound(data.medicine);
         setNewForm(null);
-      } else if (data.matched && data.rawData) {
-        const rd = data.rawData;
+      } else if (data.matched && data.scrapeData) {
+        const sd = data.scrapeData;
         setNewForm({
           ...EMPTY_FORM,
-          name_ko: rd.ITEM_NAME ?? '',
-          name_en: rd.ITEM_ENG_NAME ?? rd.MAIN_ITEM_INGR ?? '',
-          brand_name: rd.ITEM_NAME ?? '',
-          indication: rd.ETC_OTC_NAME ?? '',
+          name_ko: sd.name ?? '',
+          name_en: '',
+          brand_name: sd.name ?? '',
+          form: sd.form ?? '',
+          indication: sd.company ?? '',
           barcode: code.trim(),
         });
-        setMsg('외부 API에서 조회됨. 아래 정보를 확인하고 신규 등록하세요.');
+        setMsg('as21.net에서 조회됨. 아래 정보를 확인하고 신규 등록하세요.');
       } else {
         setMsg(data.error ?? '바코드 미확인 — 수동 입력으로 진행하세요.');
       }
