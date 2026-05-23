@@ -4,7 +4,7 @@ import type { Medicine } from './schema';
 
 interface ScrapeData {
   name?: string;
-  spec?: string;
+  packQty?: string;
   company?: string;
   form?: string;
   barcode?: string;
@@ -30,7 +30,7 @@ export async function lookupBarcode(barcode: string): Promise<{
         source: 'scrape',
         scrapeData: {
           name: scraped.name,
-          spec: scraped.spec,
+          packQty: scraped.packQty,
           company: scraped.company,
           form: scraped.form,
           barcode: scraped.barcode,

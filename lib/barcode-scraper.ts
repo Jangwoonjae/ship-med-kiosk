@@ -39,7 +39,7 @@ async function getSession(): Promise<string> {
 export async function searchBarcodeFromSite(barcode: string): Promise<{
   matched: boolean;
   name?: string;
-  spec?: string;
+  packQty?: string;
   company?: string;
   form?: string;
   barcode?: string;
@@ -73,26 +73,23 @@ export async function searchBarcodeFromSite(barcode: string): Promise<{
       return { matched: false, error: '세션 만료 — 재시도 필요' };
     }
 
-    const rows = $('table tr');
-    if (rows.length <= 1) {
-      return { matched: false };
-    }
-
-    const firstRow = rows.eq(1);
+    const rows = $('table.table-hover tr').slice(1);
+    const firstRow = rows.first();
     const cols = firstRow.find('td');
 
     if (cols.length === 0) {
       return { matched: false };
     }
 
-    const name    = cols.eq(1).text().trim();
-    const spec    = cols.eq(2).text().trim();
+    const name    = cols.eq(0).text().trim();
+    const packQty = cols.eq(1).text().trim();
+    const form    = cols.eq(2).text().trim();
     const company = cols.eq(3).text().trim();
-    const form    = cols.eq(4).text().trim();
+    const barcode = cols.eq(5).text().trim();
 
-    if (!name) return { matched: false };
+    if (!name || !barcode) return { matched: false };
 
-    return { matched: true, name, spec, company, form, barcode };
+    return { matched: true, name, packQty, form, company, barcode };
 
   } catch (error) {
     console.error('바코드 스크래핑 오류:', error);
