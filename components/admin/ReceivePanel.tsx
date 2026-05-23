@@ -47,15 +47,12 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
   const [pendingNewForm, setPendingNewForm] = useState<NewMedicineForm | null>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
-  const extractKeyword = (name: string): string => {
-    const first = name.trim().split(/\s+/)[0];
-    return first.slice(0, 4);
-  };
+  const extractKeyword = (name: string): string => name.trim().slice(0, 4);
 
-  const detectCategory = (name: string): '내용약' | '주사약' | '외용약' => {
-    const n = name.toLowerCase();
-    if (/주사|injection|amp|vial/.test(n)) return '주사약';
-    if (/크림|연고|gel|cream|oint/.test(n)) return '외용약';
+  const detectCategory = (name: string, form: string): '내용약' | '주사약' | '외용약' => {
+    const text = (name + ' ' + form).toLowerCase();
+    if (/주사|injection|amp|vial|iv|infusion|수액|앰플|바이알/.test(text)) return '주사약';
+    if (/크림|연고|gel|cream|oint|로션|액|drops|spray|패치|밴드|band|파스|테이프|포비돈|소독|외용|점안|점이|비강/.test(text)) return '외용약';
     return '내용약';
   };
 
@@ -80,7 +77,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
           name_ko: sd.name ?? '',
           name_en: '',
           brand_name: sd.name ?? '',
-          category: detectCategory((sd.name ?? '') + ' ' + (sd.form ?? '')),
+          category: detectCategory(sd.name ?? '', sd.form ?? ''),
           form: sd.form ?? '',
           indication: sd.company ?? '',
           barcode: sd.barcode ?? code.trim(),
@@ -249,7 +246,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
                   setSimilarMeds([]);
                   setPendingNewForm(null);
                   setMsg('');
-                }}>기존 품목에 입고</TouchButton>
+                }}>이 품목에 입고</TouchButton>
               </div>
             ))}
           </div>
@@ -314,7 +311,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
                 <option>내용약</option><option>주사약</option><option>외용약</option>
               </select>
               <span className="text-xs text-blue-500 mt-0.5 block">
-                자동 감지: {detectCategory(newForm.name_ko + ' ' + newForm.brand_name + ' ' + newForm.form)}
+                자동 감지: {detectCategory(newForm.name_ko + ' ' + newForm.brand_name, newForm.form)}
               </span>
             </div>
             <div>

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PinPad from '@/components/admin/PinPad';
 import StockTable from '@/components/admin/StockTable';
 import ReceivePanel from '@/components/admin/ReceivePanel';
@@ -13,6 +13,15 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('stock');
   const [routeType, setRouteType] = useState('international');
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const handlePopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   if (!authed) return <PinPad onSuccess={() => setAuthed(true)} />;
 

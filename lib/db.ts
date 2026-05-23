@@ -12,7 +12,7 @@ if (url.startsWith('file:')) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
-const client = createClient({
+export const client = createClient({
   url,
   authToken: process.env.TURSO_AUTH_TOKEN,
 });

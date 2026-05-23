@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { listMedicines, createMedicine, getSummaryStats } from '@/lib/medicines';
+import { listMedicines, getSummaryStats } from '@/lib/medicines';
+import { client } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,9 +26,35 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id: _id, created_at: _ca, updated_at: _ua, ...rest } = body;
-    const item = await createMedicine({ ...rest, name_en: rest.name_en ?? '' });
+    const {
+      category = '내용약',
+      name_en = '',
+      name_ko = '',
+      brand_name = '',
+      form = '',
+      strength = '',
+      indication = '',
+      std_intl = 0,
+      std_dom = 0,
+      current_qty = 0,
+      barcode = null,
+    } = body;
+
+    const result = await client.execute({
+      sql: `INSERT INTO medicines
+            (category, name_en, name_ko, brand_name, form, strength,
+             indication, std_intl, std_dom, current_qty, barcode,
+             created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      args: [category, name_en, name_ko, brand_name, form, strength,
+             indication, std_intl, std_dom, current_qty, barcode],
+    });
+
+    const sel = await client.execute({
+      sql: 'SELECT * FROM medicines WHERE id = ?',
+      args: [result.lastInsertRowid ?? 0],
+    });
+    const item = Object.fromEntries(sel.columns.map((col, i) => [col, sel.rows[0][i]]));
     return NextResponse.json(item, { status: 201 });
   } catch (e) {
     const msg = e instanceof Error ? e.message : '등록 실패';
