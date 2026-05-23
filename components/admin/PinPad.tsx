@@ -11,6 +11,7 @@ export default function PinPad({ onSuccess }: PinPadProps) {
   const [loading, setLoading] = useState(false);
 
   const handleKey = (key: string) => {
+    alert('눌림: ' + key);
     if (pin.length < 4) setPin(p => p + key);
   };
 
