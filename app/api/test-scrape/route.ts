@@ -40,9 +40,29 @@ export async function GET() {
     return NextResponse.json({ loginStatus, loginCookie, loginHtmlPreview, loginError });
   }
 
-  // 2. 바코드 검색
+  // 2. 메인 페이지 접속 (로그인 확인용)
+  let mainStatus: number | null = null;
+  let mainHtmlPreview: string | null = null;
+  let mainError: string | null = null;
+
+  try {
+    const mainRes = await fetch(`${BASE_URL}/dBaseMain.asp`, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        'Cookie': loginCookie ?? '',
+        'Referer': `${BASE_URL}/`,
+      },
+    });
+    mainStatus = mainRes.status;
+    mainHtmlPreview = (await mainRes.text()).slice(0, 500);
+  } catch (e) {
+    mainError = String(e);
+  }
+
+  // 3. 바코드 검색
   let searchStatus: number | null = null;
-  let searchHtmlPreview: string | null = null;
+  let tableHtml: string | null = null;
   let searchError: string | null = null;
 
   try {
@@ -60,7 +80,8 @@ export async function GET() {
 
     searchStatus = searchRes.status;
     const html = await searchRes.text();
-    searchHtmlPreview = html.slice(0, 5000);
+    const tableMatch = html.match(/<table[\s\S]*?<\/table>/i);
+    tableHtml = tableMatch ? tableMatch[0] : '테이블 없음';
   } catch (e) {
     searchError = String(e);
   }
@@ -70,8 +91,11 @@ export async function GET() {
     loginCookie,
     loginHtmlPreview,
     loginError,
+    mainStatus,
+    mainHtmlPreview,
+    mainError,
     searchStatus,
-    searchHtmlPreview,
+    tableHtml,
     searchError,
   });
 }
