@@ -9,7 +9,11 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({
       connected: false,
-      error: error instanceof Error ? error.message : String(error),
+      error: String(error),
+      message: (error as any)?.message,
+      code: (error as any)?.code,
+      host: process.env.MSSQL_HOST,
+      port: process.env.MSSQL_PORT,
     });
   }
 }
