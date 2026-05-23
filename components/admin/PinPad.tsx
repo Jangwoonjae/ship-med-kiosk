@@ -16,6 +16,11 @@ export default function PinPad({ onSuccess }: PinPadProps) {
 
   const handleClear = () => { setPin(''); setError(''); };
 
+  const handleTouchKey = (e: React.TouchEvent, key: string) => {
+    e.preventDefault();
+    handleKey(key);
+  };
+
   const handleSubmit = async () => {
     if (pin.length !== 4) return;
     setLoading(true);
@@ -64,6 +69,7 @@ export default function PinPad({ onSuccess }: PinPadProps) {
           <button
             key={k}
             onClick={() => handleKey(k)}
+            onTouchEnd={(e) => handleTouchKey(e, k)}
             style={{
               width: '88px',
               height: '88px',
@@ -81,6 +87,7 @@ export default function PinPad({ onSuccess }: PinPadProps) {
         ))}
         <button
           onClick={handleClear}
+          onTouchEnd={(e) => { e.preventDefault(); handleClear(); }}
           style={{
             width: '88px',
             height: '88px',
@@ -95,6 +102,7 @@ export default function PinPad({ onSuccess }: PinPadProps) {
         >취소</button>
         <button
           onClick={() => handleKey('0')}
+          onTouchEnd={(e) => handleTouchKey(e, '0')}
           style={{
             width: '88px',
             height: '88px',
@@ -109,6 +117,7 @@ export default function PinPad({ onSuccess }: PinPadProps) {
         >0</button>
         <button
           onClick={handleSubmit}
+          onTouchEnd={(e) => { e.preventDefault(); handleSubmit(); }}
           disabled={pin.length !== 4 || loading}
           style={{
             width: '88px',
