@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       category = '내용약',
-      name_en = '',
       name_ko = '',
       brand_name = '',
       form = '',
@@ -39,6 +38,7 @@ export async function POST(req: NextRequest) {
       current_qty = 0,
       barcode = null,
     } = body;
+    const name_en: string | null = body.name_en?.trim() || null;
 
     const result = await client.execute({
       sql: `INSERT INTO medicines

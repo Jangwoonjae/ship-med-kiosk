@@ -3,7 +3,7 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 export const medicines = sqliteTable('medicines', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   category: text('category').notNull(), // '주사약' | '내용약' | '외용약'
-  name_en: text('name_en').notNull(),
+  name_en: text('name_en'),
   name_ko: text('name_ko').notNull(),
   brand_name: text('brand_name').notNull().default(''),
   form: text('form').notNull().default(''),
