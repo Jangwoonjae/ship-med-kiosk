@@ -11,7 +11,6 @@ export default function PinPad({ onSuccess }: PinPadProps) {
   const [loading, setLoading] = useState(false);
 
   const handleKey = (key: string) => {
-    alert('눌림: ' + key);
     if (pin.length < 4) setPin(p => p + key);
   };
 
@@ -47,25 +46,37 @@ export default function PinPad({ onSuccess }: PinPadProps) {
   };
 
   return (
-    <div style={{ backgroundColor: '#1d4ed8' }} className="flex flex-col items-center justify-center min-h-screen gap-8">
-      <h1 className="text-white font-bold" style={{ fontSize: '30px' }}>관리자 인증</h1>
-      <p className="text-blue-200" style={{ fontSize: '15px' }}>PIN 4자리를 입력하세요</p>
+    <div style={{
+      backgroundColor: '#1d4ed8',
+      minHeight: '100vh',
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '32px',
+    }}>
+      <h1 style={{ color: 'white', fontWeight: 'bold', fontSize: '30px', margin: 0 }}>관리자 인증</h1>
+      <p style={{ color: '#bfdbfe', fontSize: '15px', margin: 0 }}>PIN 4자리를 입력하세요</p>
 
-      <div className="flex gap-4 my-2">
-        {[0, 1, 2, 3].map(i => (
+      <div style={{ display: 'flex', gap: '16px' }}>
+        {Array.from({ length: 4 }, (_, i) => (
           <div
             key={i}
-            style={{ width: '56px', height: '56px' }}
-            className={`rounded-full border-2 flex items-center justify-center ${
-              i < pin.length ? 'bg-white border-white' : 'border-white border-opacity-60'
-            }`}
+            style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              border: '2px solid white',
+              backgroundColor: i < pin.length ? 'white' : 'transparent',
+            }}
           />
         ))}
       </div>
 
-      {error && <p className="text-red-300" style={{ fontSize: '15px' }}>{error}</p>}
+      {error && <p style={{ color: '#fca5a5', fontSize: '15px', margin: 0 }}>{error}</p>}
 
-      <div className="grid grid-cols-3 gap-3">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 88px)', gap: '12px' }}>
         {['1','2','3','4','5','6','7','8','9'].map(k => (
           <button
             key={k}
