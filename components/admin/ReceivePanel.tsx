@@ -43,13 +43,6 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [newForm, setNewForm] = useState<NewMedicineForm | null>(null);
-  const [showNewForm, setShowNewForm] = useState(false);
-  const [newMed, setNewMed] = useState({
-    category: '내용약', name_ko: '', name_en: '', brand_name: '',
-    form: '', strength: '', indication: '',
-    std_intl: 0, std_dom: 0, current_qty: 0, barcode: '',
-  });
-  const [newMedMsg, setNewMedMsg] = useState('');
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -75,16 +68,8 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
           brand_name: sd.name ?? '',
           form: sd.form ?? '',
           indication: sd.company ?? '',
-          barcode: code.trim(),
-        });
-        setNewMed(prev => ({
-          ...prev,
-          name_ko: sd.name ?? '',
-          brand_name: sd.name ?? '',
           barcode: sd.barcode ?? code.trim(),
-          form: sd.form ?? '',
-        }));
-        setShowNewForm(true);
+        });
         setMsg('as21.net에서 조회됨. 아래 정보를 확인하고 신규 등록하세요.');
       } else {
         setMsg(data.error ?? '바코드 미확인 — 수동 입력으로 진행하세요.');
@@ -153,187 +138,12 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
     }
   };
 
-  const handleNewMedSubmit = async () => {
-    if (!newMed.name_ko || !newMed.category) {
-      setNewMedMsg('성분명(한글)과 분류는 필수입니다.');
-      return;
-    }
-    const res = await fetch('/api/medicines', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...newMed, barcode: newMed.barcode || null }),
-    });
-    if (res.ok) {
-      setNewMedMsg('✅ 신규 품목이 등록되었습니다.');
-      setNewMed({
-        category: '내용약', name_ko: '', name_en: '', brand_name: '',
-        form: '', strength: '', indication: '',
-        std_intl: 0, std_dom: 0, current_qty: 0, barcode: '',
-      });
-      setShowNewForm(false);
-      onComplete();
-    } else {
-      setNewMedMsg('등록 실패');
-    }
-  };
-
   const setField = (k: keyof NewMedicineForm, v: string | number) =>
     setNewForm(f => f ? { ...f, [k]: v } : f);
 
   return (
     <div className="space-y-6 max-w-2xl">
       <BarcodeInput onScan={handleBarcode} />
-
-      {/* 신규 등록 폼 */}
-      {showNewForm && (
-        <div className="border-2 border-purple-200 rounded-xl p-4 bg-purple-50 space-y-3">
-          <h3 className="font-semibold text-purple-800 text-lg">신규 의약품 등록</h3>
-
-          <div>
-            <label className="text-sm text-gray-600 block mb-1">분류 *</label>
-            <div className="flex gap-2">
-              {['주사약', '내용약', '외용약'].map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setNewMed(p => ({ ...p, category: cat }))}
-                  className={`flex-1 py-2 rounded-lg border-2 text-sm font-medium ${
-                    newMed.category === cat
-                      ? 'border-purple-500 bg-purple-100 text-purple-700'
-                      : 'border-gray-200 text-gray-600'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">성분명(한글) *</label>
-              <input
-                type="text"
-                value={newMed.name_ko}
-                onChange={e => setNewMed(p => ({ ...p, name_ko: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-                placeholder="예: 아세트아미노펜"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">성분명(영문) <span className="text-gray-400 text-xs">(선택)</span></label>
-              <input
-                type="text"
-                value={newMed.name_en}
-                onChange={e => setNewMed(p => ({ ...p, name_en: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-                placeholder="예: Acetaminophen"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">상품명(별칭)</label>
-              <input
-                type="text"
-                value={newMed.brand_name}
-                onChange={e => setNewMed(p => ({ ...p, brand_name: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-                placeholder="예: 타이레놀"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">제형</label>
-              <input
-                type="text"
-                value={newMed.form}
-                onChange={e => setNewMed(p => ({ ...p, form: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-                placeholder="예: tab, amp, vial, cream"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">함량</label>
-              <input
-                type="text"
-                value={newMed.strength}
-                onChange={e => setNewMed(p => ({ ...p, strength: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-                placeholder="예: 500mg, 5mg/1mL"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">바코드</label>
-              <input
-                type="text"
-                value={newMed.barcode}
-                onChange={e => setNewMed(p => ({ ...p, barcode: e.target.value }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-                placeholder="바코드 번호"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-600 block mb-1">효능·효과</label>
-            <input
-              type="text"
-              value={newMed.indication}
-              onChange={e => setNewMed(p => ({ ...p, indication: e.target.value }))}
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-              placeholder="예: 해열, 진통"
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">국제선 기준수량</label>
-              <input
-                type="number" min={0}
-                value={newMed.std_intl}
-                onChange={e => setNewMed(p => ({ ...p, std_intl: Number(e.target.value) }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">국내선 기준수량</label>
-              <input
-                type="number" min={0}
-                value={newMed.std_dom}
-                onChange={e => setNewMed(p => ({ ...p, std_dom: Number(e.target.value) }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">현재 재고</label>
-              <input
-                type="number" min={0}
-                value={newMed.current_qty}
-                onChange={e => setNewMed(p => ({ ...p, current_qty: Number(e.target.value) }))}
-                className="w-full border rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
-          </div>
-
-          {newMedMsg && (
-            <div className={`p-3 rounded-lg text-sm ${newMedMsg.startsWith('✅') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-              {newMedMsg}
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <button
-              onClick={handleNewMedSubmit}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium"
-            >
-              등록
-            </button>
-            <button
-              onClick={() => { setShowNewForm(false); setNewMedMsg(''); }}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-medium"
-            >
-              취소
-            </button>
-          </div>
-        </div>
-      )}
 
       <div>
         <h3 className="text-lg font-semibold mb-2">바코드 입력</h3>
@@ -419,11 +229,11 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
         </div>
       )}
 
-      {/* 신규 품목 등록 */}
+      {/* 바코드 스캔 후 미등록 품목 신규 등록 */}
       {newForm && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 space-y-3">
-          <h3 className="font-bold text-orange-800">신규 품목 등록</h3>
-          <p className="text-xs text-orange-600">외부 API 조회 결과 — 정보를 확인하고 등록하세요</p>
+          <h3 className="font-bold text-orange-800">신규 의약품 등록</h3>
+          <p className="text-xs text-orange-600">외부 조회 결과 — 정보를 확인하고 등록하세요</p>
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
