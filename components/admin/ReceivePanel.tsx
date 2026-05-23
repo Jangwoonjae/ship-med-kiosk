@@ -184,16 +184,6 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
     <div className="space-y-6 max-w-2xl">
       <BarcodeInput onScan={handleBarcode} />
 
-      {/* 신규 품목 등록 버튼 */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => { setShowNewForm(v => !v); setNewMedMsg(''); }}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
-        >
-          ➕ 신규 품목 등록
-        </button>
-      </div>
-
       {/* 신규 등록 폼 */}
       {showNewForm && (
         <div className="border-2 border-purple-200 rounded-xl p-4 bg-purple-50 space-y-3">
