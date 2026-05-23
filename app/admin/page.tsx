@@ -25,24 +25,24 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col" suppressHydrationWarning>
-      <header style={{ backgroundColor: '#1e3a5f' }} className="bg-gray-900 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <header style={{ backgroundColor: '#1e3a5f' }} className="bg-gray-900 text-white px-4 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-base sm:text-xl font-bold">선내 의약품 관리 — 관리자</h1>
-          <p className="text-gray-400 text-xs sm:text-sm">{routeType === 'international' ? '국제선' : '국내선'} 모드</p>
+          <h1 className="text-xl font-bold">선내 의약품 관리 — 관리자</h1>
+          <p className="text-gray-400 text-sm">{routeType === 'international' ? '국제선' : '국내선'} 모드</p>
         </div>
-        <div className="flex gap-2 sm:gap-3">
-          <a href="/" className="text-gray-400 text-xs sm:text-sm hover:text-white">← 선원</a>
-          <button onClick={() => setAuthed(false)} className="text-gray-400 text-xs sm:text-sm hover:text-red-400">로그아웃</button>
+        <div className="flex gap-3">
+          <a href="/" className="text-gray-400 text-base hover:text-white">← 선원</a>
+          <button onClick={() => setAuthed(false)} className="text-gray-400 text-base hover:text-red-400">로그아웃</button>
         </div>
       </header>
 
-      <nav className="bg-white border-b px-2 sm:px-6 flex gap-0 overflow-x-auto">
+      <nav className="bg-white border-b px-2 flex gap-0 overflow-x-auto">
         {tabs.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`
-              px-3 sm:px-5 py-3 sm:py-4 text-sm sm:text-base font-medium border-b-2 -mb-px transition-colors whitespace-nowrap
+              px-6 py-4 text-xl font-medium border-b-2 -mb-px transition-colors whitespace-nowrap
               ${tab === t.key ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600 hover:text-gray-900'}
             `}
           >
@@ -51,7 +51,7 @@ export default function AdminPage() {
         ))}
       </nav>
 
-      <main className="flex-1 p-3 sm:p-6 overflow-y-auto">
+      <main className="flex-1 p-4 overflow-y-auto">
         {tab === 'stock' && <StockTable key={refreshKey} routeType={routeType} />}
         {tab === 'receive' && <ReceivePanel onComplete={() => setRefreshKey(k => k + 1)} />}
         {tab === 'history' && <TransactionLog />}

@@ -205,11 +205,11 @@ export default function StockTable({ routeType }: StockTableProps) {
 
       {/* 테이블 */}
       <div className="overflow-x-auto rounded-xl border">
-        <table className="w-full text-sm">
+        <table className="w-full text-base">
           <thead className="bg-gray-50 text-gray-600">
             <tr>
               {['성분명', '분류', '현재고', '기준수량', '상태', '조정'].map(h => (
-                <th key={h} className="px-3 py-3 text-left font-medium">{h}</th>
+                <th key={h} className="px-4 py-4 text-left font-medium">{h}</th>
               ))}
             </tr>
           </thead>
@@ -223,18 +223,18 @@ export default function StockTable({ routeType }: StockTableProps) {
                   className="border-t hover:bg-blue-50 cursor-pointer"
                   onClick={() => { setDetail(m); setAdjDelta(0); }}
                 >
-                  <td className="px-3 py-3">
+                  <td className="px-4 py-4">
                     <div className="font-medium">{m.name_ko}</div>
-                    <div className="text-gray-400 text-xs">{m.name_en}</div>
+                    <div className="text-gray-400 text-sm">{m.name_en}</div>
                   </td>
-                  <td className="px-3 py-3">{m.category}</td>
-                  <td className="px-3 py-3 font-bold">{m.current_qty}</td>
-                  <td className="px-3 py-3">{std}</td>
-                  <td className="px-3 py-3"><StatusBadge status={status} /></td>
-                  <td className="px-3 py-3">
+                  <td className="px-4 py-4">{m.category}</td>
+                  <td className="px-4 py-4 font-bold">{m.current_qty}</td>
+                  <td className="px-4 py-4">{std}</td>
+                  <td className="px-4 py-4"><StatusBadge status={status} /></td>
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                      <button className="w-8 h-8 bg-gray-200 rounded text-lg hover:bg-gray-300" onClick={e => { e.stopPropagation(); setDetail(m); setAdjDelta(-1); }}>−</button>
-                      <button className="w-8 h-8 bg-gray-200 rounded text-lg hover:bg-gray-300" onClick={e => { e.stopPropagation(); setDetail(m); setAdjDelta(1); }}>+</button>
+                      <button className="w-10 h-10 bg-gray-200 rounded text-xl hover:bg-gray-300" onClick={e => { e.stopPropagation(); setDetail(m); setAdjDelta(-1); }}>−</button>
+                      <button className="w-10 h-10 bg-gray-200 rounded text-xl hover:bg-gray-300" onClick={e => { e.stopPropagation(); setDetail(m); setAdjDelta(1); }}>+</button>
                     </div>
                   </td>
                 </tr>
@@ -248,33 +248,33 @@ export default function StockTable({ routeType }: StockTableProps) {
       {detail && (
         <div className="fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black/40" onClick={() => { setDetail(null); setEditMode(false); setEditMsg(''); }} />
-          <div className="w-full sm:w-[420px] bg-white shadow-2xl p-4 sm:p-6 overflow-y-auto flex flex-col gap-5">
+          <div className="w-full sm:w-[480px] bg-white shadow-2xl p-6 overflow-y-auto flex flex-col gap-5">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-xl font-bold">{detail.name_ko}</h3>
-                <p className="text-sm text-gray-500">{detail.name_en}</p>
+                <h3 className="text-2xl font-bold">{detail.name_ko}</h3>
+                <p className="text-base text-gray-500">{detail.name_en}</p>
               </div>
-              <button onClick={() => { setDetail(null); setEditMode(false); setEditMsg(''); }} className="text-gray-400 text-2xl leading-none">✕</button>
+              <button onClick={() => { setDetail(null); setEditMode(false); setEditMsg(''); }} className="text-gray-400 text-3xl leading-none">✕</button>
             </div>
 
-            <div className="space-y-1.5 text-sm bg-gray-50 rounded-xl p-4">
-              <p><span className="text-gray-500 w-20 inline-block">상품명</span> {detail.brand_name}</p>
-              <p><span className="text-gray-500 w-20 inline-block">분류</span> {detail.category}</p>
-              <p><span className="text-gray-500 w-20 inline-block">제형/함량</span> {detail.form} {detail.strength}</p>
-              <p><span className="text-gray-500 w-20 inline-block">효능</span> {detail.indication}</p>
-              <p><span className="text-gray-500 w-20 inline-block">현재고</span> <strong>{detail.current_qty}</strong></p>
-              <p><span className="text-gray-500 w-20 inline-block">기준수량</span> 국제 {detail.std_intl} / 국내 {detail.std_dom}</p>
-              <p><span className="text-gray-500 w-20 inline-block">바코드</span> {detail.barcode ? <code className="bg-white border rounded px-1">{detail.barcode}</code> : '미등록'}</p>
+            <div className="space-y-2 text-base bg-gray-50 rounded-xl p-4">
+              <p><span className="text-gray-500 w-24 inline-block">상품명</span> {detail.brand_name}</p>
+              <p><span className="text-gray-500 w-24 inline-block">분류</span> {detail.category}</p>
+              <p><span className="text-gray-500 w-24 inline-block">제형/함량</span> {detail.form} {detail.strength}</p>
+              <p><span className="text-gray-500 w-24 inline-block">효능</span> {detail.indication}</p>
+              <p><span className="text-gray-500 w-24 inline-block">현재고</span> <strong>{detail.current_qty}</strong></p>
+              <p><span className="text-gray-500 w-24 inline-block">기준수량</span> 국제 {detail.std_intl} / 국내 {detail.std_dom}</p>
+              <p><span className="text-gray-500 w-24 inline-block">바코드</span> {detail.barcode ? <code className="bg-white border rounded px-1">{detail.barcode}</code> : '미등록'}</p>
             </div>
 
             <div>
-              <p className="text-sm font-semibold mb-2">재고 직접 조정</p>
+              <p className="text-base font-semibold mb-2">재고 직접 조정</p>
               <div className="flex items-center gap-2">
-                <button className="w-10 h-10 bg-gray-200 rounded-lg text-xl hover:bg-gray-300" onClick={() => setAdjDelta(d => d - 1)}>−</button>
-                <span className={`w-14 text-center text-xl font-bold ${adjDelta > 0 ? 'text-green-600' : adjDelta < 0 ? 'text-red-600' : 'text-gray-700'}`}>
+                <button className="w-12 h-12 bg-gray-200 rounded-lg text-2xl hover:bg-gray-300" onClick={() => setAdjDelta(d => d - 1)}>−</button>
+                <span className={`w-16 text-center text-2xl font-bold ${adjDelta > 0 ? 'text-green-600' : adjDelta < 0 ? 'text-red-600' : 'text-gray-700'}`}>
                   {adjDelta > 0 ? `+${adjDelta}` : adjDelta}
                 </span>
-                <button className="w-10 h-10 bg-gray-200 rounded-lg text-xl hover:bg-gray-300" onClick={() => setAdjDelta(d => d + 1)}>+</button>
+                <button className="w-12 h-12 bg-gray-200 rounded-lg text-2xl hover:bg-gray-300" onClick={() => setAdjDelta(d => d + 1)}>+</button>
                 <TouchButton variant="primary" size="sm" onClick={() => handleAdj(detail.id)} disabled={adjDelta === 0}>
                   적용
                 </TouchButton>
@@ -282,7 +282,7 @@ export default function StockTable({ routeType }: StockTableProps) {
             </div>
 
             <div>
-              <p className="text-sm font-semibold mb-2">최근 이력</p>
+              <p className="text-base font-semibold mb-2">최근 이력</p>
               {history.length === 0 ? (
                 <p className="text-sm text-gray-400">이력 없음</p>
               ) : (
@@ -309,8 +309,7 @@ export default function StockTable({ routeType }: StockTableProps) {
                 <>
                   <button
                     onClick={() => {
-                      setEditMode(true);
-                      setEditMsg('');
+                      setEditMode(true); setEditMsg('');
                       setEditData({
                         category: detail.category,
                         name_ko: detail.name_ko,
@@ -324,14 +323,14 @@ export default function StockTable({ routeType }: StockTableProps) {
                         barcode: detail.barcode ?? '',
                       });
                     }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-base font-medium"
                   >
                     ✏️ 품목 정보 수정
                   </button>
                   <button
                     onClick={handleDelete}
                     disabled={deleting}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                    className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg text-base font-medium disabled:opacity-50"
                   >
                     🗑️ 품목 삭제
                   </button>
@@ -410,8 +409,8 @@ export default function StockTable({ routeType }: StockTableProps) {
                   )}
 
                   <div className="flex gap-2">
-                    <button onClick={handleEditSave} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">저장</button>
-                    <button onClick={() => { setEditMode(false); setEditMsg(''); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium">취소</button>
+                    <button onClick={handleEditSave} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-base font-medium">저장</button>
+                    <button onClick={() => { setEditMode(false); setEditMsg(''); }} className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg text-base font-medium">취소</button>
                   </div>
                 </div>
               )}
