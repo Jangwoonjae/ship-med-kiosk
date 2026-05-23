@@ -36,7 +36,18 @@ export async function GET() {
       results[table] = await queryTable(pool, table);
     }
 
-    return NextResponse.json({ connected: true, results });
+    let sample: any[] = [];
+    let sampleError: string | null = null;
+    try {
+      const sampleRes = await pool.request().query(
+        'SELECT TOP 20 BoxBarcode, BoxBarName, BoxBarSpec FROM tblBarcodeinBox'
+      );
+      sample = sampleRes.recordset;
+    } catch (e) {
+      sampleError = String(e);
+    }
+
+    return NextResponse.json({ connected: true, results, sample, sampleError });
   } catch (error) {
     return NextResponse.json({
       connected: false,
