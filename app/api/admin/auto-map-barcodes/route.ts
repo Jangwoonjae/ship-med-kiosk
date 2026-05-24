@@ -4,6 +4,22 @@ import { getSession, login } from '@/lib/barcode-scraper';
 
 const BASE_URL = process.env.BARCODE_SITE_URL ?? 'https://as21.net/mr7';
 
+const alternativeNames: Record<string, string[]> = {
+  '히요스신부틸브로마이드': ['부스코판', 'hyoscine', '스코폴라민부틸'],
+  '비타민B복합제': ['비타민B', '활력비타민', '비콤'],
+  '디메칠하이드리네이트': ['드라마민', '보나링', '멀미'],
+  '코데인+파라세타몰': ['코데인', 'codeine'],
+  '티아민(비타민B1)': ['비타민B1', '티아민', '아리나민'],
+  '경구수분보충액': ['포카리', '이온음료', '수분보충'],
+  '포비돈요오드연고': ['베타딘연고', '포비돈연고', '이오포비돈'],
+  '하이드로코르티손크림': ['하이드로코르티손크림', '코르티손크림'],
+  '시프로플록사신점이액': ['시프로플록사신점이', '귀약'],
+  '자일로메타졸린비강분무액': ['자일로메타졸린', '오트리빈', '비강'],
+  '탄력붕대': ['탄력붕대', '붕대'],
+  '삼각붕대': ['삼각붕대'],
+  '트라마돌(경구)': ['트라마돌정', '트리돌정'],
+};
+
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -70,6 +86,23 @@ export async function GET() {
           cookie = await login();
           const retry = await searchBarcodesForName(med.name_ko, cookie);
           barcodes = retry.barcodes;
+        }
+
+        // 미발견 시 대체 검색어로 재시도
+        if (barcodes.length === 0) {
+          const alternatives = alternativeNames[med.name_ko] ?? [];
+          for (const altName of alternatives) {
+            await delay(500);
+            const alt = await searchBarcodesForName(altName, cookie);
+            if (alt.sessionExpired) {
+              cookie = await login();
+              const retry = await searchBarcodesForName(altName, cookie);
+              barcodes = retry.barcodes;
+            } else {
+              barcodes = alt.barcodes;
+            }
+            if (barcodes.length > 0) break;
+          }
         }
 
         if (barcodes.length === 0) {
