@@ -48,19 +48,44 @@ export async function getMedicineById(id: number) {
   return db.select().from(medicines).where(eq(medicines.id, id)).get();
 }
 
+const normalizeBarcode = (barcode: string): string[] => {
+  const clean = barcode.replace(/[^0-9]/g, '');
+  const variants: string[] = [clean];
+
+  // GS1-128: 01 + 14자리 → 13자리로 변환
+  if (clean.startsWith('01') && clean.length === 16) {
+    variants.push(clean.slice(3)); // 앞 01 + 선행 0 제거 → 13자리
+    variants.push(clean.slice(2)); // 앞 01만 제거 → 14자리
+  }
+
+  // 13자리 → 14자리 (선행 0 추가)
+  if (clean.length === 13) {
+    variants.push('0' + clean); // 14자리
+    variants.push('01' + '0' + clean); // GS1 형식
+  }
+
+  return [...new Set(variants)];
+};
+
 export async function getMedicineByBarcode(barcode: string) {
   const { client } = await import('./db');
-  const result = await client.execute({
-    sql: `SELECT * FROM medicines
-          WHERE barcode = ?
-             OR barcode LIKE ?
-             OR barcode LIKE ?
-             OR barcode LIKE ?
-          LIMIT 1`,
-    args: [barcode, barcode + ',%', '%,' + barcode, '%,' + barcode + ',%'],
-  });
-  if (!result.rows[0]) return undefined;
-  return Object.fromEntries(result.columns.map((col, i) => [col, result.rows[0][i]])) as typeof medicines.$inferSelect;
+  const variants = normalizeBarcode(barcode);
+
+  for (const v of variants) {
+    const result = await client.execute({
+      sql: `SELECT * FROM medicines
+            WHERE barcode = ?
+               OR barcode LIKE ?
+               OR barcode LIKE ?
+               OR barcode LIKE ?
+            LIMIT 1`,
+      args: [v, v + ',%', '%,' + v, '%,' + v + ',%'],
+    });
+    if (result.rows[0]) {
+      return Object.fromEntries(result.columns.map((col, i) => [col, result.rows[0][i]])) as typeof medicines.$inferSelect;
+    }
+  }
+  return undefined;
 }
 
 export async function createMedicine(data: schema.NewMedicine) {
