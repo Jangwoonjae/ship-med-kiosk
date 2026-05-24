@@ -33,14 +33,27 @@ const EMPTY_FORM: NewMedicineForm = {
   form: '', strength: '', indication: '', std_intl: 0, std_dom: 0, barcode: '',
 };
 
-// GS1 AI(17) = 유효기간 YYMMDD
 const parseGS1Expiry = (barcode: string): string | null => {
-  const match = barcode.match(/17(\d{6})/);
+  // 특수문자(GS1 구분자) 제거 후 파싱
+  const clean = barcode.replace(/[^0-9]/g, '');
+
+  // AI(17) 유효기간 패턴 - 여러 위치에서 탐색
+  const match = clean.match(/17(\d{6})/);
   if (!match) return null;
+
   const yy = match[1].slice(0, 2);
   const mm = match[1].slice(2, 4);
+  const dd = match[1].slice(4, 6);
   const year = parseInt(yy) < 50 ? '20' + yy : '19' + yy;
-  return `${year}-${mm}`;
+
+  return year + '-' + mm;
+};
+
+// 로트번호도 자동 파싱
+const parseGS1Lot = (barcode: string): string | null => {
+  const clean = barcode.replace(/[^0-9a-zA-Z]/g, '');
+  const match = clean.match(/10([A-Z0-9]+?)(?=\d{2}[0-9]{6}|$)/i);
+  return match ? match[1] : null;
 };
 
 export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
@@ -80,6 +93,9 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
     // GS1-128 2D 바코드에서 유효기간 자동 추출
     const parsedExpiry = parseGS1Expiry(code.trim());
     if (parsedExpiry) setExpiryDate(parsedExpiry);
+
+    const parsedLot = parseGS1Lot(code.trim());
+    if (parsedLot) setLotNo(parsedLot);
 
     try {
       const res = await fetch(`/api/barcode/${encodeURIComponent(code.trim())}`);
