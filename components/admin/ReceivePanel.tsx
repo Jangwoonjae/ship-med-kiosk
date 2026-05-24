@@ -69,7 +69,7 @@ const parseGS1Lot = (barcode: string): string | null => {
 };
 
 export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
-  const [manualCode, setManualCode] = useState('');
+  const [barcodeInput, setBarcodeInput] = useState('');
   const [searchQ, setSearchQ] = useState('');
   const [searchResults, setSearchResults] = useState<Medicine[]>([]);
   const [found, setFound] = useState<Medicine | null>(null);
@@ -254,12 +254,12 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
             ref={barcodeInputRef}
             type="text"
             placeholder="바코드 번호 직접 입력"
-            value={manualCode}
-            onChange={e => setManualCode(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { handleBarcode(manualCode); setManualCode(''); } }}
+            value={barcodeInput}
+            onChange={e => setBarcodeInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { handleBarcode(barcodeInput); setBarcodeInput(''); } }}
             className="border rounded-lg px-3 py-2 text-base flex-1"
           />
-          <TouchButton variant="secondary" size="sm" onClick={() => { handleBarcode(manualCode); setManualCode(''); }}>
+          <TouchButton variant="secondary" size="sm" onClick={() => { handleBarcode(barcodeInput); setBarcodeInput(''); }}>
             조회
           </TouchButton>
           <button
@@ -276,7 +276,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
 
       {cameraOpen && (
         <BarcodeCamera
-          onScan={code => { handleBarcode(code); }}
+          onScan={code => { setCameraOpen(false); setBarcodeInput(code); }}
           onClose={() => setCameraOpen(false)}
         />
       )}
