@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import BarcodeInput from '../ui/BarcodeInput';
+import BarcodeCamera from '../ui/BarcodeCamera';
 import TouchButton from '../ui/TouchButton';
 
 interface Medicine {
@@ -78,6 +79,9 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
   const [lotNo, setLotNo] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const isHttps = typeof window !== 'undefined' &&
+    (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
   const [newForm, setNewForm] = useState<NewMedicineForm | null>(null);
   const [similarMeds, setSimilarMeds] = useState<Medicine[]>([]);
   const [pendingNewForm, setPendingNewForm] = useState<NewMedicineForm | null>(null);
@@ -258,9 +262,24 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
           <TouchButton variant="secondary" size="sm" onClick={() => { handleBarcode(manualCode); setManualCode(''); }}>
             조회
           </TouchButton>
+          <button
+            onClick={() => setCameraOpen(true)}
+            disabled={!isHttps}
+            className="border rounded-lg px-3 py-2 text-base bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+            title={!isHttps ? 'HTTPS 환경에서만 사용 가능' : '카메라로 스캔'}
+          >
+            📷 카메라
+          </button>
         </div>
         <p className="text-gray-400 text-sm mt-1">USB 바코드 리더기로 스캔하거나 직접 입력하세요</p>
       </div>
+
+      {cameraOpen && (
+        <BarcodeCamera
+          onScan={code => { handleBarcode(code); }}
+          onClose={() => setCameraOpen(false)}
+        />
+      )}
 
       <div>
         <h3 className="text-lg font-semibold mb-2">품목 검색</h3>
