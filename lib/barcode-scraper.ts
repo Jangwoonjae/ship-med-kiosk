@@ -5,7 +5,7 @@ const SITE_PW  = process.env.BARCODE_SITE_PW ?? '';
 let sessionCookie: string | null = null;
 let sessionExpiry = 0;
 
-async function login(): Promise<string> {
+export async function login(): Promise<string> {
   const formData = new URLSearchParams();
   formData.set('webId', SITE_ID);
   formData.set('webPwd', SITE_PW);
@@ -31,7 +31,7 @@ async function login(): Promise<string> {
   return cookie;
 }
 
-async function getSession(): Promise<string> {
+export async function getSession(): Promise<string> {
   if (sessionCookie && Date.now() < sessionExpiry) {
     return sessionCookie;
   }
