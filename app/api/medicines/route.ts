@@ -6,17 +6,18 @@ export async function GET(req: NextRequest) {
   try {
     const sp = req.nextUrl.searchParams;
     const category = sp.get('category') ?? undefined;
-    const search = sp.get('search') ?? undefined;
+    const search = sp.get('search') ?? sp.get('similar') ?? undefined;
     const status = sp.get('status') as 'normal' | 'warning' | 'critical' | null;
     const routeType = sp.get('routeType') ?? 'international';
     const summary = sp.get('summary') === '1';
+    const limit = sp.get('limit') ? Number(sp.get('limit')) : undefined;
 
     if (summary) {
       return NextResponse.json(await getSummaryStats(routeType));
     }
 
     const items = await listMedicines({ category, search, status: status ?? undefined, routeType });
-    return NextResponse.json(items);
+    return NextResponse.json(limit ? items.slice(0, limit) : items);
   } catch (e) {
     console.error(e);
     return Response.json({ error: String(e) }, { status: 500 });
