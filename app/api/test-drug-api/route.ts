@@ -1,39 +1,40 @@
 import { NextResponse } from 'next/server';
 
 const API_KEY = process.env.DRUG_API_KEY ?? '';
-const keyword = encodeURIComponent('모드코프');
-
-const apis = [
-  {
-    label: 'nedrug API',
-    url: `https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService06/getDrugPrdtPrmsnDtlInq06?serviceKey=${API_KEY}&item_name=${keyword}&type=json&numOfRows=3&pageNo=1`,
-  },
-  {
-    label: 'nedrug 허가 v3',
-    url: `https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService03/getDrugPrdtPrmsnDtlInq03?serviceKey=${API_KEY}&item_name=${keyword}&type=json&numOfRows=3&pageNo=1`,
-  },
-  {
-    label: 'nedrug 성분',
-    url: `https://apis.data.go.kr/1471000/MdcinGrnIdntfcInfoService/getMdcinGrnIdntfcInfoList?serviceKey=${API_KEY}&item_name=${keyword}&type=json&numOfRows=3&pageNo=1`,
-  },
-  {
-    label: 'nedrug 표준코드',
-    url: `https://apis.data.go.kr/B551182/msupCertImport/getdListDrugStandCode?serviceKey=${API_KEY}&ITEM_NAME=${keyword}&type=json&numOfRows=3`,
-  },
-];
 
 export async function GET() {
-  const results = await Promise.all(
-    apis.map(async ({ label, url }) => {
-      try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-        const raw = await res.text();
-        return { label, status: res.status, rawResponse: raw.slice(0, 300) };
-      } catch (e) {
-        return { label, status: 0, error: String(e) };
-      }
-    })
-  );
+  const { load } = await import('cheerio');
 
-  return NextResponse.json({ keyword: '모드코프', results });
+  // 1단계: e약은요 API로 itemSeq 획득
+  const easyUrl = `https://apis.data.go.kr/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList?serviceKey=${API_KEY}&itemName=${encodeURIComponent('모드코프')}&type=json&numOfRows=3&pageNo=1`;
+  const easyRes = await fetch(easyUrl);
+  const easyData = await easyRes.json();
+  const itemSeq: string = easyData?.body?.items?.[0]?.itemSeq ?? '';
+
+  // 2단계: 의약품안전나라에서 성분 스크래핑
+  let ingredients = '';
+  let nedrugStatus = 0;
+
+  if (itemSeq) {
+    const nedrugUrl = `https://nedrug.mfds.go.kr/pbp/CCBBB01/getItemDetail?itemSeq=${itemSeq}`;
+    const nedrugRes = await fetch(nedrugUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+    nedrugStatus = nedrugRes.status;
+    const nedrugHtml = await nedrugRes.text();
+    const $ = load(nedrugHtml);
+
+    $('th, td').each((_, el) => {
+      const text = $(el).text().trim();
+      if (text.includes('성분') || text.includes('함량')) {
+        ingredients += text + ' | ';
+      }
+    });
+  }
+
+  return NextResponse.json({
+    itemSeq,
+    nedrugStatus,
+    ingredients: ingredients.slice(0, 500),
+  });
 }
