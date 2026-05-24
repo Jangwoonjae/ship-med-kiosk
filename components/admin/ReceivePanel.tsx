@@ -11,6 +11,7 @@ interface Medicine {
   brand_name: string;
   category: string;
   current_qty: number;
+  barcode: string | null;
 }
 
 interface NewMedicineForm {
@@ -65,6 +66,29 @@ const parseGS1 = (barcode: string) => ({
   expiry: parseGS1Expiry(barcode),
   lot: parseGS1Lot(barcode),
 });
+
+const extractKeywords = (name: string): string[] => {
+  const keywords: string[] = [];
+
+  // 1순위: 괄호 안 성분명
+  const parenMatches = name.match(/\(([^)]+)\)/g);
+  if (parenMatches) {
+    parenMatches.forEach(m => {
+      const inner = m.replace(/[()]/g, '').trim();
+      const first = inner.split(/[+,·]/)[0].trim();
+      if (first.length >= 2) keywords.push(first.slice(0, 6));
+    });
+  }
+
+  // 2순위: 괄호 앞 상품명 앞 4글자
+  const beforeParen = name.split('(')[0].trim();
+  if (beforeParen.length >= 2) keywords.push(beforeParen.slice(0, 4));
+
+  // 3순위: 전체 앞 4글자
+  keywords.push(name.slice(0, 4));
+
+  return [...new Set(keywords.filter(k => k.length >= 2))];
+};
 
 const detectCategory = (name: string, form: string): '내용약' | '주사약' | '외용약' => {
   const text = (name + ' ' + form).toLowerCase();
@@ -147,7 +171,6 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
 
       // 2단계: 스크래핑 결과 → 유사 성분명 검색
       const scrapedName = (data.medicine as any)?.name ?? '';
-      const keyword = scrapedName.split(/[\s(]/)[0].slice(0, 5);
 
       const baseForm: NewMedicineForm = {
         ...EMPTY_FORM,
@@ -160,16 +183,19 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
         category: detectCategory(scrapedName, (data.medicine as any)?.form ?? ''),
       };
 
-      if (keyword.length >= 2) {
-        const simRes = await fetch('/api/medicines?search=' + encodeURIComponent(keyword) + '&limit=5');
-        const simList: Medicine[] = await simRes.json();
+      const keywords = extractKeywords(scrapedName);
+      let simList: Medicine[] = [];
+      for (const kw of keywords) {
+        const simRes = await fetch('/api/medicines?search=' + encodeURIComponent(kw) + '&limit=5');
+        simList = await simRes.json();
+        if (simList.length > 0) break;
+      }
 
-        if (simList.length > 0) {
-          // 3-A: 유사 성분명 발견
-          setSimilarMedicines(simList);
-          setNewMed(baseForm);
-          return;
-        }
+      if (simList.length > 0) {
+        // 3-A: 유사 성분명 발견
+        setSimilarMedicines(simList);
+        setNewMed(baseForm);
+        return;
       }
 
       // 3-B: 유사 성분명 없음 → 신규 등록 폼
@@ -218,15 +244,20 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
   };
 
   // ── 3-A: 유사 성분명 매핑 후 입고 ────────────────────────
-  const handleMappingInbound = async (medicineId: number) => {
+  const handleMappingInbound = async (med: Medicine) => {
     setLoading(true);
     try {
-      // 바코드를 해당 성분명에 연결 저장
-      await fetch('/api/medicines/' + medicineId, {
+      // 기존 바코드에 추가 (덮어쓰지 않고 append)
+      const existingBarcode = med.barcode ?? '';
+      const newBarcode = existingBarcode
+        ? existingBarcode + ',' + barcodeInput
+        : barcodeInput;
+
+      await fetch('/api/medicines/' + med.id, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          barcode: barcodeInput,
+          barcode: newBarcode,
           expiry_date: expiryDate ? expiryDate + '-01' : null,
           lot_no: lotNo || null,
         }),
@@ -236,7 +267,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          medicine_id: medicineId,
+          medicine_id: med.id,
           type: 'in',
           quantity: inboundQty,
           actor: '관리자',
@@ -475,7 +506,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
                   <div className="text-sm text-gray-500">현재고: {med.current_qty}</div>
                 </div>
                 <button
-                  onClick={() => handleMappingInbound(med.id)}
+                  onClick={() => handleMappingInbound(med)}
                   disabled={loading}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm disabled:opacity-50"
                 >
