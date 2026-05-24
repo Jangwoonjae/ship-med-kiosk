@@ -136,8 +136,11 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
         return;
       }
 
+      console.log('barcode result:', data);
+
       // 1단계: DB에 바코드 직접 매칭
       if (data.source === 'local' && data.directInbound) {
+        console.log('직접 입고 모드:', data.medicine);
         setDirectMedicine(data.medicine as Medicine);
         return;
       }
