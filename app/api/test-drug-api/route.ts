@@ -1,16 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { searchDrugByName, searchIngredientByName } from '@/lib/drugApi';
+import { NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const name = searchParams.get('name') ?? '모드코프정';
+const API_KEY = process.env.DRUG_API_KEY ?? '';
+const DRUG_DETAIL_URL = 'https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService04/getDrugPrdtPrmsnDtlInq03';
 
-  const ingredient = await searchIngredientByName(name);
-  const drugInfo = await searchDrugByName(name);
+export async function GET() {
+  const url = new URL(DRUG_DETAIL_URL);
+  url.searchParams.set('serviceKey', API_KEY);
+  url.searchParams.set('item_name', '모드코프');
+  url.searchParams.set('type', 'json');
+  url.searchParams.set('numOfRows', '3');
+  url.searchParams.set('pageNo', '1');
+
+  const res = await fetch(url.toString());
+  const raw = await res.text();
 
   return NextResponse.json({
-    query: name,
-    ingredientFromDetailApi: ingredient,
-    ingredientFromEasyApi: drugInfo,
+    url: url.toString().replace(API_KEY, 'HIDDEN'),
+    status: res.status,
+    rawResponse: raw.slice(0, 2000),
   });
 }
