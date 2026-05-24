@@ -343,13 +343,17 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
             <label className="text-sm font-medium text-gray-700 block mb-1">
               유효기간 <span className="text-gray-400 text-xs">(선택)</span>
             </label>
+            {expiryDate && (
+              <div className="text-sm text-blue-600 mb-1">
+                📅 자동 인식: {expiryDate}
+              </div>
+            )}
             <div className="flex gap-2 items-center">
               <input
                 type="month"
                 value={expiryDate}
                 onChange={e => setExpiryDate(e.target.value)}
                 className="border rounded-lg px-3 py-2 text-base bg-white"
-                placeholder="YYYY-MM"
               />
               {expiryDate && (
                 <button onClick={() => setExpiryDate('')} className="text-gray-400 text-sm">지우기</button>
@@ -443,6 +447,11 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
             </div>
             <div>
               <label className="block text-gray-600 mb-0.5">유효기간 <span className="text-gray-400 text-xs">(선택)</span></label>
+              {expiryDate && (
+                <div className="text-xs text-blue-600 mb-1">
+                  📅 자동 인식: {expiryDate}
+                </div>
+              )}
               <div className="flex gap-1 items-center">
                 <input
                   type="month"
