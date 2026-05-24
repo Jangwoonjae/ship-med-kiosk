@@ -1,5 +1,5 @@
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
-import { db, schema } from './db';
+import { db, schema, client } from './db';
 import { updateMedicineQty } from './medicines';
 
 const { transactions, medicines } = schema;
@@ -63,21 +63,23 @@ export async function recordTransaction(data: {
     throw new Error('재고가 부족합니다.');
   }
 
-  const tx = await db
-    .insert(transactions)
-    .values({
-      medicine_id: data.medicine_id,
-      type: data.type,
-      quantity: data.quantity,
-      actor: data.actor,
-      note: data.note ?? '',
-      created_at: new Date().toISOString(),
-    })
-    .returning()
-    .get();
-
-  await updateMedicineQty(data.medicine_id, delta);
-  return tx;
+  await client.execute('BEGIN');
+  try {
+    await client.execute({
+      sql: `UPDATE medicines SET current_qty = current_qty + ?, updated_at = datetime('now') WHERE id = ?`,
+      args: [delta, data.medicine_id],
+    });
+    const inserted = await client.execute({
+      sql: `INSERT INTO transactions (medicine_id, type, quantity, actor, note, created_at)
+            VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+      args: [data.medicine_id, data.type, data.quantity, data.actor, data.note ?? ''],
+    });
+    await client.execute('COMMIT');
+    return { id: Number(inserted.lastInsertRowid), ...data };
+  } catch (e) {
+    await client.execute('ROLLBACK');
+    throw e;
+  }
 }
 
 export async function recordBatchOut(items: Array<{ medicine_id: number; quantity: number }>, actor: string) {

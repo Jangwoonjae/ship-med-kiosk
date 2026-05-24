@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { client } from '@/lib/db';
 import { getSession, login } from '@/lib/barcode-scraper';
 
@@ -57,7 +57,12 @@ async function searchBarcodesForName(nameKo: string, cookie: string): Promise<{
   return { barcodes: [...new Set(barcodes)], sessionExpired: false };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const secret = req.nextUrl.searchParams.get('secret');
+  if (secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     // 1. barcode가 null이거나 빈 품목 전체 조회
     const result = await client.execute(

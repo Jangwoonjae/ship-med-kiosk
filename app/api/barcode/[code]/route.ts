@@ -12,12 +12,21 @@ export async function GET(_req: NextRequest, { params }: Params) {
     const result = await lookupBarcode(code);
 
     // local DB hit — return as-is
-    if (!result.matched || result.source !== 'scrape') {
+    if (result.source === 'local') {
       return NextResponse.json(result);
     }
 
-    // scrape hit — drug API → Ollama
-    const scrapedName = (result.medicine as any)?.name ?? '';
+    // scrape hit or fallback
+    let scrapedName = (result.medicine as any)?.name ?? '';
+
+    // as21.net 실패 시 식약처 API로 폴백
+    if (!result.matched || !scrapedName || scrapedName === '실행 결과가 없습니다.') {
+      const fallback = await searchDrugByName(code);
+      if (!fallback) {
+        return NextResponse.json({ matched: false, source: 'none', error: '등록되지 않은 바코드입니다.' });
+      }
+      scrapedName = fallback;
+    }
 
     // 1. 식약처 API로 성분명 조회
     let ingredientFromApi: string | null = await searchIngredientByName(scrapedName);
