@@ -31,11 +31,11 @@ export async function GET(_req: NextRequest, { params }: Params) {
     );
     const ingredientList = allMeds.rows.map(r => String(r[1] ?? '')).filter(Boolean);
 
-    const promptContext = ingredientFromApi
-      ? `품명: ${scrapedName}\n식약처 성분: ${ingredientFromApi}`
-      : `품명: ${scrapedName}`;
+    const productName = ingredientFromApi
+      ? `${scrapedName} (식약처 성분: ${ingredientFromApi})`
+      : scrapedName;
 
-    const matchedIngredient = await matchIngredient(promptContext, ingredientList);
+    const matchedIngredient = await matchIngredient(productName, ingredientList);
 
     // 3. 매핑된 성분명으로 품목 상세 조회
     let suggestedMedicine = null;
