@@ -49,7 +49,18 @@ export async function getMedicineById(id: number) {
 }
 
 export async function getMedicineByBarcode(barcode: string) {
-  return db.select().from(medicines).where(eq(medicines.barcode, barcode)).get();
+  const { client } = await import('./db');
+  const result = await client.execute({
+    sql: `SELECT * FROM medicines
+          WHERE barcode = ?
+             OR barcode LIKE ?
+             OR barcode LIKE ?
+             OR barcode LIKE ?
+          LIMIT 1`,
+    args: [barcode, barcode + ',%', '%,' + barcode, '%,' + barcode + ',%'],
+  });
+  if (!result.rows[0]) return undefined;
+  return Object.fromEntries(result.columns.map((col, i) => [col, result.rows[0][i]])) as typeof medicines.$inferSelect;
 }
 
 export async function createMedicine(data: schema.NewMedicine) {
