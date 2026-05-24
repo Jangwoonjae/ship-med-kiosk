@@ -11,6 +11,7 @@ interface Medicine {
   brand_name: string;
   category: string;
   current_qty: number;
+  std_intl: number;
   barcode: string | null;
 }
 
@@ -104,6 +105,8 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
 
   // 3단계 흐름 상태
   const [directMedicine, setDirectMedicine] = useState<Medicine | null>(null);
+  const [suggestedMedicine, setSuggestedMedicine] = useState<Medicine | null>(null);
+  const [scrapedName, setScrapedName] = useState('');
   const [similarMedicines, setSimilarMedicines] = useState<Medicine[]>([]);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newMed, setNewMed] = useState<NewMedicineForm>({ ...EMPTY_FORM });
@@ -124,6 +127,8 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
 
   const resetInbound = () => {
     setDirectMedicine(null);
+    setSuggestedMedicine(null);
+    setScrapedName('');
     setSimilarMedicines([]);
     setShowNewForm(false);
     setNewMed({ ...EMPTY_FORM });
@@ -144,6 +149,8 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
     setLoading(true);
     setMsg('');
     setDirectMedicine(null);
+    setSuggestedMedicine(null);
+    setScrapedName('');
     setSimilarMedicines([]);
     setShowNewForm(false);
 
@@ -169,21 +176,31 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
         return;
       }
 
-      // 2단계: 스크래핑 결과 → 유사 성분명 검색
-      const scrapedName = (data.medicine as any)?.name ?? '';
+      // 2단계: 스크래핑 결과
+      const scraped = (data.medicine as any);
+      const name = scraped?.name ?? '';
+      setScrapedName(name);
 
       const baseForm: NewMedicineForm = {
         ...EMPTY_FORM,
-        name_ko: scrapedName,
-        brand_name: (data.medicine as any)?.name ?? '',
+        name_ko: name,
+        brand_name: name,
         barcode: code.trim(),
-        form: (data.medicine as any)?.form ?? '',
-        strength: (data.medicine as any)?.packQty ?? '',
-        indication: (data.medicine as any)?.company ?? '',
-        category: detectCategory(scrapedName, (data.medicine as any)?.form ?? ''),
+        form: scraped?.form ?? '',
+        strength: scraped?.packQty ?? '',
+        indication: scraped?.company ?? '',
+        category: detectCategory(name, scraped?.form ?? ''),
       };
 
-      const keywords = extractKeywords(scrapedName);
+      // 2-A: Ollama AI 성분명 제안
+      if (data.suggestedMedicine) {
+        setSuggestedMedicine(data.suggestedMedicine as Medicine);
+        setNewMed(baseForm);
+        return;
+      }
+
+      // 2-B: Ollama 제안 없음 → 키워드 매칭
+      const keywords = extractKeywords(name);
       let simList: Medicine[] = [];
       for (const kw of keywords) {
         const simRes = await fetch('/api/medicines?search=' + encodeURIComponent(kw) + '&limit=5');
@@ -192,13 +209,12 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
       }
 
       if (simList.length > 0) {
-        // 3-A: 유사 성분명 발견
         setSimilarMedicines(simList);
         setNewMed(baseForm);
         return;
       }
 
-      // 3-B: 유사 성분명 없음 → 신규 등록 폼
+      // 2-C: 유사 성분명 없음 → 신규 등록 폼
       setNewMed(baseForm);
       setShowNewForm(true);
     } finally {
@@ -451,6 +467,62 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
           'bg-yellow-50 text-yellow-700'
         }`}>
           {msg}
+        </div>
+      )}
+
+      {/* AI 분석 중 로딩 */}
+      {loading && (
+        <div className="text-center py-4">
+          <div className="text-gray-500 text-sm">🤖 AI가 성분명을 분석 중입니다...</div>
+        </div>
+      )}
+
+      {/* AI 성분명 제안 */}
+      {suggestedMedicine && !showNewForm && (
+        <div className="border-2 border-blue-200 rounded-xl p-4 bg-blue-50">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-blue-600 text-lg">🤖</span>
+            <h3 className="font-semibold text-blue-800 text-lg">AI 성분 매핑 제안</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-1">
+            <span className="font-medium">{scrapedName}</span>
+          </p>
+          <p className="text-sm text-gray-600 mb-3">위 제품이 아래 성분명과 동일한 약품으로 판단됩니다.</p>
+
+          <div className="bg-white rounded-lg p-3 border mb-4">
+            <div className="font-semibold text-lg">{suggestedMedicine.name_ko}</div>
+            <div className="text-sm text-gray-500">{suggestedMedicine.brand_name}</div>
+            <div className="text-sm text-gray-500 mt-1">
+              현재고: {suggestedMedicine.current_qty} / 기준: {suggestedMedicine.std_intl}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mb-3">
+            <label className="text-sm font-medium">입고 수량:</label>
+            <button onClick={() => setInboundQty(q => Math.max(1, q - 1))}
+              className="w-10 h-10 rounded-lg border text-lg font-bold bg-white hover:bg-gray-100">−</button>
+            <span className="text-xl font-bold w-12 text-center">{inboundQty}</span>
+            <button onClick={() => setInboundQty(q => q + 1)}
+              className="w-10 h-10 rounded-lg border text-lg font-bold bg-white hover:bg-gray-100">+</button>
+          </div>
+
+          <ExpiryLotSection />
+
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => handleMappingInbound(suggestedMedicine)}
+              disabled={loading}
+              className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold disabled:opacity-50"
+            >
+              이 성분으로 입고
+            </button>
+            <button
+              onClick={() => { setSuggestedMedicine(null); setShowNewForm(true); }}
+              className="flex-1 border-2 border-gray-300 text-gray-600 py-3 rounded-xl font-medium"
+            >
+              신규 등록
+            </button>
+          </div>
         </div>
       )}
 
