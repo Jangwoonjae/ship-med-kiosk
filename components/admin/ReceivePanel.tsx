@@ -34,19 +34,30 @@ const EMPTY_FORM: NewMedicineForm = {
 };
 
 const parseGS1Expiry = (barcode: string): string | null => {
-  // 특수문자(GS1 구분자) 제거 후 파싱
   const clean = barcode.replace(/[^0-9]/g, '');
 
-  // AI(17) 유효기간 패턴 - 여러 위치에서 탐색
-  const match = clean.match(/17(\d{6})/);
-  if (!match) return null;
+  // AI(01) 14자리 다음에 AI(17) 6자리 찾기
+  // 구조: 01(2) + GTIN(14) + 17(2) + YYMMDD(6)
+  if (clean.startsWith('01') && clean.slice(16, 18) === '17') {
+    const dateStr = clean.slice(18, 24);
+    const yy = dateStr.slice(0, 2);
+    const mm = dateStr.slice(2, 4);
+    const year = parseInt(yy) < 50 ? '20' + yy : '19' + yy;
+    return year + '-' + mm;
+  }
 
-  const yy = match[1].slice(0, 2);
-  const mm = match[1].slice(2, 4);
-  const dd = match[1].slice(4, 6);
-  const year = parseInt(yy) < 50 ? '20' + yy : '19' + yy;
+  // 위치가 다른 경우 전체에서 17 찾기 (단, GTIN 안의 17은 제외)
+  // GTIN은 앞 16자리이므로 16자리 이후에서 검색
+  const afterGtin = clean.slice(16);
+  const match = afterGtin.match(/^17(\d{6})/);
+  if (match) {
+    const yy = match[1].slice(0, 2);
+    const mm = match[1].slice(2, 4);
+    const year = parseInt(yy) < 50 ? '20' + yy : '19' + yy;
+    return year + '-' + mm;
+  }
 
-  return year + '-' + mm;
+  return null;
 };
 
 // 로트번호도 자동 파싱
