@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { lookupBarcode } from '@/lib/barcode';
+import { searchDrugByName, searchIngredientByName } from '@/lib/drugApi';
 import { matchIngredient } from '@/lib/ollama';
 import { client } from '@/lib/db';
 
@@ -15,16 +16,28 @@ export async function GET(_req: NextRequest, { params }: Params) {
       return NextResponse.json(result);
     }
 
-    // scrape hit — run Ollama ingredient matching
+    // scrape hit — drug API → Ollama
     const scrapedName = (result.medicine as any)?.name ?? '';
 
+    // 1. 식약처 API로 성분명 조회
+    let ingredientFromApi: string | null = await searchIngredientByName(scrapedName);
+    if (!ingredientFromApi) {
+      ingredientFromApi = await searchDrugByName(scrapedName);
+    }
+
+    // 2. Ollama AI로 DB 성분명 매핑
     const allMeds = await client.execute(
       'SELECT id, name_ko FROM medicines ORDER BY name_ko'
     );
     const ingredientList = allMeds.rows.map(r => String(r[1] ?? '')).filter(Boolean);
 
-    const matchedIngredient = await matchIngredient(scrapedName, ingredientList);
+    const promptContext = ingredientFromApi
+      ? `품명: ${scrapedName}\n식약처 성분: ${ingredientFromApi}`
+      : `품명: ${scrapedName}`;
 
+    const matchedIngredient = await matchIngredient(promptContext, ingredientList);
+
+    // 3. 매핑된 성분명으로 품목 상세 조회
     let suggestedMedicine = null;
     if (matchedIngredient) {
       const found = allMeds.rows.find(r => String(r[1]) === matchedIngredient);
@@ -43,6 +56,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
     return NextResponse.json({
       ...result,
+      ingredientFromApi,
       suggestedMedicine,
       suggestedIngredient: matchedIngredient,
     });

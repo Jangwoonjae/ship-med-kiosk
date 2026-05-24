@@ -4,17 +4,18 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gemma3:12b';
 const OLLAMA_URL   = `http://${OLLAMA_HOST}:${OLLAMA_PORT}/api/generate`;
 
 export async function matchIngredient(
-  productName: string,
+  context: string,           // "품명: 모드코프정\n식약처 성분: 아세트아미노펜+클로르페니라민"
   ingredientList: string[]
 ): Promise<string | null> {
-  if (!productName || ingredientList.length === 0) return null;
+  if (!context || ingredientList.length === 0) return null;
 
-  const prompt = `다음 의약품 품명을 보고 아래 성분명 목록 중 가장 관련 있는 성분명 하나만 답하세요.
-품명이 해당 성분을 포함하거나, 같은 계열의 약품이면 해당 성분명을 선택하세요.
+  const prompt = `당신은 의약품 전문가입니다.
+아래 의약품 정보를 보고 성분명 목록 중 주성분과 가장 일치하는 것 하나만 답하세요.
 목록에 없으면 "없음"이라고만 답하세요.
-다른 설명 없이 성분명 또는 "없음"만 답하세요.
+반드시 목록에 있는 성분명 그대로만 답하고 다른 설명은 하지 마세요.
 
-의약품 품명: ${productName}
+의약품 정보:
+${context}
 
 성분명 목록:
 ${ingredientList.join('\n')}
