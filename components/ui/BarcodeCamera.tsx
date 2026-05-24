@@ -7,6 +7,22 @@ interface BarcodeCameraProps {
   onClose: () => void;
 }
 
+const playBeep = () => {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.frequency.value = 1800;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.15);
+  } catch {}
+};
+
 export default function BarcodeCamera({ onScan, onClose }: BarcodeCameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -14,15 +30,22 @@ export default function BarcodeCamera({ onScan, onClose }: BarcodeCameraProps) {
   useEffect(() => {
     const reader = new BrowserMultiFormatReader();
 
-    reader.decodeFromVideoDevice(
-      undefined,
+    reader.decodeFromConstraints(
+      {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+          focusMode: 'continuous',
+        } as MediaTrackConstraints,
+      },
       videoRef.current!,
       (result, err) => {
         if (result) {
-          console.log('카메라 스캔 성공:', result.getText());
+          playBeep();
           BrowserMultiFormatReader.releaseAllStreams();
+          console.log('카메라 스캔 성공:', result.getText());
           onScan(result.getText());
-          // onClose는 ReceivePanel에서 처리
         }
       }
     ).catch(() => {
