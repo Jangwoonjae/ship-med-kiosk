@@ -19,8 +19,10 @@ export default function BarcodeCamera({ onScan, onClose }: BarcodeCameraProps) {
       videoRef.current!,
       (result, err) => {
         if (result) {
+          console.log('카메라 스캔 성공:', result.getText());
           BrowserMultiFormatReader.releaseAllStreams();
           onScan(result.getText());
+          // onClose는 ReceivePanel에서 처리
         }
       }
     ).catch(() => {

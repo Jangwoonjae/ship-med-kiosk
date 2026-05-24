@@ -82,6 +82,12 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
   const [cameraOpen, setCameraOpen] = useState(false);
   const isHttps = typeof window !== 'undefined' &&
     (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+
+  const handleCameraScan = (code: string) => {
+    setCameraOpen(false);   // 카메라 모달 닫기
+    setBarcodeInput(code);  // 입력창에 바코드 번호 표시
+    // 자동 조회 안함 - 사용자가 조회 버튼 누를 때
+  };
   const [newForm, setNewForm] = useState<NewMedicineForm | null>(null);
   const [similarMeds, setSimilarMeds] = useState<Medicine[]>([]);
   const [pendingNewForm, setPendingNewForm] = useState<NewMedicineForm | null>(null);
@@ -276,7 +282,7 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
 
       {cameraOpen && (
         <BarcodeCamera
-          onScan={code => { setCameraOpen(false); setBarcodeInput(code); }}
+          onScan={handleCameraScan}
           onClose={() => setCameraOpen(false)}
         />
       )}
