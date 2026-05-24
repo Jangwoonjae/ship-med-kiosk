@@ -1,49 +1,43 @@
 import { NextResponse } from 'next/server';
 
-const API_KEY = process.env.DRUG_API_KEY ?? '';
-const keyword = '모드코프';
-
 export async function GET() {
-  // 1단계: DrbEasyDrugInfoService로 itemSeq 획득
-  const url1 = `https://apis.data.go.kr/1471000/DrbEasyDrugInfoService/getDrbEasyDrugList?serviceKey=${API_KEY}&itemName=${encodeURIComponent(keyword)}&type=json&numOfRows=3&pageNo=1`;
+  const { load } = await import('cheerio');
 
-  const res1 = await fetch(url1);
-  const data1 = await res1.json();
+  // 1단계: 제품명으로 검색 → drug_cd 획득
+  const searchUrl = 'https://health.kr/searchDrug/search_total_result.asp?searchTxt='
+    + encodeURIComponent('모드코프에스');
 
-  const items1 = data1?.body?.items;
-  if (!items1 || items1.length === 0) {
-    return NextResponse.json({ error: '1단계: 결과 없음', raw1: JSON.stringify(data1).slice(0, 500) });
-  }
+  const searchRes = await fetch(searchUrl, {
+    headers: { 'User-Agent': 'Mozilla/5.0' },
+  });
+  const searchHtml = await searchRes.text();
+  const $1 = load(searchHtml);
 
-  const first = items1[0];
-  const itemSeq: string = first.itemSeq ?? first.ITEM_SEQ ?? '';
-  const itemName: string = first.itemName ?? first.ITEM_NAME ?? '';
+  const firstLink = $1('table tbody tr').first().find('a').attr('href') ?? '';
+  const drugCdMatch = firstLink.match(/drug_cd=([^&]+)/);
+  const drugCd = drugCdMatch?.[1] ?? '';
 
-  if (!itemSeq) {
-    return NextResponse.json({ error: 'itemSeq 없음', step1Result: first });
-  }
+  // 2단계: 동일성분 페이지에서 성분명 획득
+  let ingredients = '';
+  if (drugCd) {
+    const sunbUrl = 'https://health.kr/searchDrug/result_sunb.asp?drug_cd=' + drugCd;
+    const sunbRes = await fetch(sunbUrl, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+    const sunbHtml = await sunbRes.text();
+    const $2 = load(sunbHtml);
 
-  // 2단계: itemSeq로 주성분 조회
-  const url2 = `https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService/getDrugPrdtPrmsnDtlInq?serviceKey=${API_KEY}&item_seq=${itemSeq}&type=json`;
-
-  const res2 = await fetch(url2);
-  const raw2 = await res2.text();
-
-  let mainIngredient: string | null = null;
-  try {
-    const data2 = JSON.parse(raw2);
-    const items2 = data2?.body?.items;
-    if (items2 && items2.length > 0) {
-      mainIngredient = items2[0].MAIN_ITEM_INGR ?? items2[0].INGR_NAME ?? null;
-    }
-  } catch {
-    // raw2에서 직접 확인 가능
+    ingredients = $2('p, td, div').filter((_, el) => {
+      const text = $2(el).text();
+      return text.includes('아세트') ||
+        (text.includes('mg') && text.length < 300);
+    }).first().text().trim();
   }
 
   return NextResponse.json({
-    itemName,
-    itemSeq,
-    mainIngredient,
-    rawStep2: raw2.slice(0, 1000),
+    searchStatus: searchRes.status,
+    drugCd,
+    firstLink,
+    ingredients: ingredients.slice(0, 500),
   });
 }
