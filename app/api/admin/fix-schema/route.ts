@@ -4,6 +4,10 @@ export async function GET() {
   try {
     await client.execute('PRAGMA foreign_keys = OFF');
 
+    // 컬럼 먼저 추가 (없으면) — 백업에 포함되도록
+    await client.execute(`ALTER TABLE medicines ADD COLUMN expiry_date TEXT`).catch(() => {});
+    await client.execute(`ALTER TABLE medicines ADD COLUMN lot_no TEXT`).catch(() => {});
+
     await client.execute('CREATE TABLE IF NOT EXISTS medicines_backup AS SELECT * FROM medicines');
 
     await client.execute('DROP TABLE medicines');
@@ -21,11 +25,18 @@ export async function GET() {
       std_dom INTEGER NOT NULL DEFAULT 0,
       current_qty INTEGER NOT NULL DEFAULT 0,
       barcode TEXT,
+      expiry_date TEXT,
+      lot_no TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`);
 
-    await client.execute('INSERT INTO medicines SELECT * FROM medicines_backup');
+    await client.execute(`INSERT INTO medicines
+      (id, category, name_en, name_ko, brand_name, form, strength, indication,
+       std_intl, std_dom, current_qty, barcode, expiry_date, lot_no, created_at, updated_at)
+      SELECT id, category, name_en, name_ko, brand_name, form, strength, indication,
+             std_intl, std_dom, current_qty, barcode, expiry_date, lot_no, created_at, updated_at
+      FROM medicines_backup`);
 
     await client.execute('DROP TABLE medicines_backup');
 
@@ -35,7 +46,7 @@ export async function GET() {
 
     return Response.json({
       ok: true,
-      message: 'name_en NOT NULL 제약 제거 완료',
+      message: 'schema fix 완료 (expiry_date, lot_no 추가)',
       count: count.rows[0],
     });
   } catch (e) {

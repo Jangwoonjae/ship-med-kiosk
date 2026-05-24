@@ -17,6 +17,8 @@ interface Medicine {
   std_intl: number;
   std_dom: number;
   barcode: string | null;
+  expiry_date: string | null;
+  lot_no: string | null;
 }
 
 interface TxRow {
@@ -31,6 +33,16 @@ interface TxRow {
 interface StockTableProps {
   routeType: string;
 }
+
+const getExpiryStatus = (expiryDate: string | null) => {
+  if (!expiryDate) return { status: 'none', label: '-', color: 'gray' };
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+  const diffDays = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return { status: 'expired', label: '만료', color: 'red' };
+  if (diffDays < 90) return { status: 'soon', label: '임박', color: 'orange' };
+  return { status: 'ok', label: '정상', color: 'green' };
+};
 
 export default function StockTable({ routeType }: StockTableProps) {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -148,15 +160,20 @@ export default function StockTable({ routeType }: StockTableProps) {
 
   const stdQty = (m: Medicine) => routeType === 'international' ? m.std_intl : m.std_dom;
 
+  const expiredCount = medicines.filter(m => getExpiryStatus(m.expiry_date).status === 'expired').length;
+  const soonCount = medicines.filter(m => getExpiryStatus(m.expiry_date).status === 'soon').length;
+
   return (
     <div className="space-y-4">
       {/* 요약 카드 */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
           { label: '전체', value: summary.total, color: 'bg-blue-50 text-blue-700' },
           { label: '정상', value: summary.normal, color: 'bg-green-50 text-green-700' },
           { label: '경고', value: summary.warning, color: 'bg-orange-50 text-orange-700' },
           { label: '긴급', value: summary.critical, color: 'bg-red-50 text-red-700' },
+          { label: '유효기간 만료', value: expiredCount, color: 'bg-red-100 text-red-800' },
+          { label: '유효기간 임박', value: soonCount, color: 'bg-orange-100 text-orange-800' },
         ].map(s => (
           <div key={s.label} className={`rounded-xl p-3 sm:p-4 ${s.color}`}>
             <div className="text-2xl sm:text-3xl font-bold">{s.value}</div>
@@ -169,7 +186,7 @@ export default function StockTable({ routeType }: StockTableProps) {
       <div className="flex gap-2 flex-wrap">
         <input
           type="text"
-          placeholder="검색 (성분명·한글명)"
+          placeholder="성분명, 한글명 또는 바코드 번호 검색..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="border rounded-lg px-3 py-2 text-base flex-1 min-w-[160px]"
@@ -208,7 +225,7 @@ export default function StockTable({ routeType }: StockTableProps) {
         <table className="w-full text-base">
           <thead className="bg-gray-50 text-gray-600">
             <tr>
-              {['성분명', '분류', '현재고', '기준수량', '상태', '조정'].map(h => (
+              {['성분명', '분류', '현재고', '기준수량', '유효기간', '상태', '조정'].map(h => (
                 <th key={h} className="px-4 py-4 text-left font-medium">{h}</th>
               ))}
             </tr>
@@ -217,10 +234,14 @@ export default function StockTable({ routeType }: StockTableProps) {
             {medicines.map(m => {
               const std = stdQty(m);
               const status = getStockStatus(m.current_qty, std);
+              const expiry = getExpiryStatus(m.expiry_date);
               return (
                 <tr
                   key={m.id}
-                  className="border-t hover:bg-blue-50 cursor-pointer"
+                  className={`border-t hover:bg-blue-50 cursor-pointer ${
+                    expiry.status === 'expired' ? 'bg-red-50' :
+                    expiry.status === 'soon' ? 'bg-orange-50' : ''
+                  }`}
                   onClick={() => { setDetail(m); setAdjDelta(0); }}
                 >
                   <td className="px-4 py-4">
@@ -230,6 +251,24 @@ export default function StockTable({ routeType }: StockTableProps) {
                   <td className="px-4 py-4">{m.category}</td>
                   <td className="px-4 py-4 font-bold">{m.current_qty}</td>
                   <td className="px-4 py-4">{std}</td>
+                  <td className="px-4 py-4">
+                    {(() => {
+                      const dateStr = m.expiry_date
+                        ? new Date(m.expiry_date).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit' })
+                        : '-';
+                      return (
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          expiry.status === 'expired' ? 'bg-red-100 text-red-700' :
+                          expiry.status === 'soon' ? 'bg-orange-100 text-orange-700' :
+                          expiry.status === 'ok' ? 'bg-green-100 text-green-700' :
+                          'bg-gray-100 text-gray-500'
+                        }`}>
+                          {dateStr !== '-' && dateStr}
+                          {expiry.status !== 'none' && <span>{expiry.label}</span>}
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td className="px-4 py-4"><StatusBadge status={status} /></td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
@@ -265,6 +304,22 @@ export default function StockTable({ routeType }: StockTableProps) {
               <p><span className="text-gray-500 w-24 inline-block">현재고</span> <strong>{detail.current_qty}</strong></p>
               <p><span className="text-gray-500 w-24 inline-block">기준수량</span> 국제 {detail.std_intl} / 국내 {detail.std_dom}</p>
               <p><span className="text-gray-500 w-24 inline-block">바코드</span> {detail.barcode ? <code className="bg-white border rounded px-1">{detail.barcode}</code> : '미등록'}</p>
+              <div className="flex justify-between py-1">
+                <span className="text-gray-500">유효기간</span>
+                <span className={`text-sm font-medium ${
+                  getExpiryStatus(detail.expiry_date).status === 'expired' ? 'text-red-600' :
+                  getExpiryStatus(detail.expiry_date).status === 'soon' ? 'text-orange-600' : 'text-gray-900'
+                }`}>
+                  {detail.expiry_date
+                    ? new Date(detail.expiry_date).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit' })
+                    : '미입력'}
+                  {detail.expiry_date && ` (${getExpiryStatus(detail.expiry_date).label})`}
+                </span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-gray-500">로트번호</span>
+                <span className="text-sm font-medium">{detail.lot_no ?? '미입력'}</span>
+              </div>
             </div>
 
             <div>
@@ -321,6 +376,8 @@ export default function StockTable({ routeType }: StockTableProps) {
                         std_intl: detail.std_intl,
                         std_dom: detail.std_dom,
                         barcode: detail.barcode ?? '',
+                        expiry_date: detail.expiry_date ?? '',
+                        lot_no: detail.lot_no ?? '',
                       });
                     }}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-base font-medium"
@@ -388,6 +445,22 @@ export default function StockTable({ routeType }: StockTableProps) {
                     <div>
                       <label className="text-xs text-gray-500 block mb-1">바코드</label>
                       <input type="text" value={editData?.barcode ?? ''} onChange={e => setEditData(p => ({ ...p, barcode: e.target.value }))} className="w-full border rounded px-2 py-1.5 text-sm" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">유효기간 <span className="text-gray-400">(선택)</span></label>
+                      <input
+                        type="month"
+                        value={editData?.expiry_date ? editData.expiry_date.slice(0, 7) : ''}
+                        onChange={e => setEditData(p => ({ ...p, expiry_date: e.target.value ? e.target.value + '-01' : '' }))}
+                        className="w-full border rounded px-2 py-1.5 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500 block mb-1">로트번호 <span className="text-gray-400">(선택)</span></label>
+                      <input type="text" value={editData?.lot_no ?? ''} onChange={e => setEditData(p => ({ ...p, lot_no: e.target.value }))} className="w-full border rounded px-2 py-1.5 text-sm" placeholder="로트번호" />
                     </div>
                   </div>
 

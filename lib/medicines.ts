@@ -26,7 +26,8 @@ export async function listMedicines(params?: {
       or(
         like(medicines.name_en, `%${params.search}%`),
         like(medicines.name_ko, `%${params.search}%`),
-        like(medicines.brand_name, `%${params.search}%`)
+        like(medicines.brand_name, `%${params.search}%`),
+        like(medicines.barcode, `%${params.search}%`)
       )
     );
   }

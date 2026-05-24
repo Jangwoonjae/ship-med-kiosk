@@ -33,6 +33,16 @@ const EMPTY_FORM: NewMedicineForm = {
   form: '', strength: '', indication: '', std_intl: 0, std_dom: 0, barcode: '',
 };
 
+// GS1 AI(17) = 유효기간 YYMMDD
+const parseGS1Expiry = (barcode: string): string | null => {
+  const match = barcode.match(/17(\d{6})/);
+  if (!match) return null;
+  const yy = match[1].slice(0, 2);
+  const mm = match[1].slice(2, 4);
+  const year = parseInt(yy) < 50 ? '20' + yy : '19' + yy;
+  return `${year}-${mm}`;
+};
+
 export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
   const [manualCode, setManualCode] = useState('');
   const [searchQ, setSearchQ] = useState('');
@@ -40,6 +50,8 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
   const [found, setFound] = useState<Medicine | null>(null);
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [lotNo, setLotNo] = useState('');
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [newForm, setNewForm] = useState<NewMedicineForm | null>(null);
@@ -64,6 +76,11 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
     if (!code.trim()) return;
     setLoading(true);
     setMsg('');
+
+    // GS1-128 2D 바코드에서 유효기간 자동 추출
+    const parsedExpiry = parseGS1Expiry(code.trim());
+    if (parsedExpiry) setExpiryDate(parsedExpiry);
+
     try {
       const res = await fetch(`/api/barcode/${encodeURIComponent(code.trim())}`);
       const data = await res.json();
@@ -128,10 +145,24 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
           note: note || '입고',
         }),
       });
+
+      if (expiryDate) {
+        await fetch(`/api/medicines/${found.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            expiry_date: expiryDate + '-01',
+            lot_no: lotNo || null,
+          }),
+        });
+      }
+
       setMsg(`✅ ${found.name_ko} ${qty}개 입고 완료`);
       setFound(null);
       setQty(1);
       setNote('');
+      setExpiryDate('');
+      setLotNo('');
       onComplete();
     } finally {
       setLoading(false);
@@ -156,9 +187,22 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
         setMsg(`❌ 등록 실패: ${err.error}`);
         return;
       }
+      const created = await res.json();
+      if (expiryDate && created?.id) {
+        await fetch(`/api/medicines/${created.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            expiry_date: expiryDate + '-01',
+            lot_no: lotNo || null,
+          }),
+        });
+      }
       setMsg(`✅ "${newForm.name_ko}" 신규 등록 및 입고(${qty}개) 완료`);
       setNewForm(null);
       setQty(1);
+      setExpiryDate('');
+      setLotNo('');
       onComplete();
     } finally {
       setLoading(false);
@@ -277,6 +321,41 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
             onChange={e => setNote(e.target.value)}
             className="w-full border rounded-lg px-3 py-2 text-base"
           />
+
+          {/* 유효기간 입력 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              유효기간 <span className="text-gray-400 text-xs">(선택)</span>
+            </label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="month"
+                value={expiryDate}
+                onChange={e => setExpiryDate(e.target.value)}
+                className="border rounded-lg px-3 py-2 text-base bg-white"
+                placeholder="YYYY-MM"
+              />
+              {expiryDate && (
+                <button onClick={() => setExpiryDate('')} className="text-gray-400 text-sm">지우기</button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">2D 바코드 스캔 시 자동 입력됩니다</p>
+          </div>
+
+          {/* 로트번호 입력 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1">
+              로트번호 <span className="text-gray-400 text-xs">(선택)</span>
+            </label>
+            <input
+              type="text"
+              value={lotNo}
+              onChange={e => setLotNo(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 text-base bg-white"
+              placeholder="로트번호 입력"
+            />
+          </div>
+
           <div className="flex gap-2">
             <TouchButton variant="ghost" size="sm" onClick={() => setFound(null)}>취소</TouchButton>
             <TouchButton variant="primary" size="sm" onClick={handleReceive} disabled={loading} className="flex-1">
@@ -345,6 +424,30 @@ export default function ReceivePanel({ onComplete }: ReceivePanelProps) {
             <div>
               <label className="block text-gray-600 mb-0.5">바코드</label>
               <input className="w-full border rounded-lg px-2 py-1.5 text-sm" value={newForm.barcode} onChange={e => setField('barcode', e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-gray-600 mb-0.5">유효기간 <span className="text-gray-400 text-xs">(선택)</span></label>
+              <div className="flex gap-1 items-center">
+                <input
+                  type="month"
+                  value={expiryDate}
+                  onChange={e => setExpiryDate(e.target.value)}
+                  className="w-full border rounded-lg px-2 py-1.5 text-sm"
+                />
+                {expiryDate && (
+                  <button onClick={() => setExpiryDate('')} className="text-gray-400 text-xs whitespace-nowrap">지우기</button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="block text-gray-600 mb-0.5">로트번호 <span className="text-gray-400 text-xs">(선택)</span></label>
+              <input
+                type="text"
+                value={lotNo}
+                onChange={e => setLotNo(e.target.value)}
+                className="w-full border rounded-lg px-2 py-1.5 text-sm"
+                placeholder="로트번호"
+              />
             </div>
           </div>
 

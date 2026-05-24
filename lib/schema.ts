@@ -13,6 +13,8 @@ export const medicines = sqliteTable('medicines', {
   std_dom: integer('std_dom').notNull().default(0),
   current_qty: integer('current_qty').notNull().default(0),
   barcode: text('barcode'),
+  expiry_date: text('expiry_date'),
+  lot_no: text('lot_no'),
   created_at: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
   updated_at: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
